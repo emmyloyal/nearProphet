@@ -191,8 +191,10 @@ export class Agent {
     };
     const content = `${ask[kind]}\nReply in the user's stored language.\n\n<data>\n${JSON.stringify(data)}\n</data>`;
     const tools = kind === 'analysis' ? this.tools(true).filter((t) => 'type' in t && t.type?.startsWith('web_search')) : [];
-    const text = await this.loop(tgId, kind === 'alert' ? config.aiFastModel : config.aiModel, [{ role: 'user', content }], tools, [], kind === 'report' ? 900 : 600);
-    return stripLang(text).clean || null;
+    const model = kind === 'alert' ? config.aiFastModel : config.aiModel;
+    const run = async () => stripLang(await this.loop(tgId, model, [{ role: 'user', content }], tools, [], kind === 'report' ? 900 : 600)).clean;
+    // Providers occasionally return an empty reply; one retry is cheap.
+    return (await run()) || (await run()) || null;
   }
 
   private async loop(
