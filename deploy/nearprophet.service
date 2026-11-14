@@ -1,0 +1,20 @@
+[Unit]
+Description=nearProphet Telegram trading bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__DIR__
+ExecStart=__DIR__/node_modules/.bin/tsx src/index.ts
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+# Basic hardening: the bot only needs its own folder
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
