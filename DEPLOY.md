@@ -1,3 +1,25 @@
+# Running nearProphet on your Windows PC (free)
+
+The bot runs hidden in the background, starts by itself when you log in to Windows, and restarts within 15 seconds if it crashes. It only runs while the PC is **on, awake and online**. While the PC sleeps or is shut down, there are no alerts or reports.
+
+Run these in PowerShell from the `nearProphet` folder:
+
+| What | Command |
+|---|---|
+| Start automatically at every login (one-time setup) | `powershell -ExecutionPolicy Bypass -File deploy\windows\install.ps1` |
+| Start now | `powershell -ExecutionPolicy Bypass -File deploy\windows\start-bot.ps1` |
+| Stop | `powershell -ExecutionPolicy Bypass -File deploy\windows\stop-bot.ps1` |
+| Restart (e.g. after editing `.env`) | Stop, then Start |
+| Stop starting at login | `powershell -ExecutionPolicy Bypass -File deploy\windows\uninstall.ps1` |
+| Back up the database now | `npm run backup` |
+
+- **Logs:** one file per day in `logs\bot-YYYYMMDD.log`, kept for 14 days.
+- **Backups:** the database is copied to `backups\` each time the bot starts, then once a day, and copies are kept for 14 days. Also copy the newest backup and `.env` somewhere off this PC now and then, such as a USB stick or a password manager.
+- **Laptops:** set sleep to *Never* when plugged in (Settings → System → Power), keep it plugged in, and don't close the lid unless *When I close the lid* is set to *Do nothing* (Control Panel → Power Options → Choose what closing the lid does).
+- **One copy only:** don't also run `npm start` while the background bot is running. Two copies fight over Telegram messages.
+
+---
+
 # Hosting nearProphet for free on Google Cloud
 
 The bot runs 24/7 on Google Cloud's free **e2-micro** server: 1 GB RAM and a 30 GB disk, free with no end date if you stay inside the limits below. It takes about 20 minutes.

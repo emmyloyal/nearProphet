@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test test/*.test.ts",
     "smoke": "tsx scripts/smoke.ts",
-    "genkey": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+    "genkey": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
+    "backup": "tsx scripts/backup.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
