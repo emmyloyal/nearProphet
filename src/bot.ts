@@ -12,7 +12,9 @@ import { evaluate, liveTechnicals } from './monitor.js';
 import { createWalletFor, exportKey, ftBalance, ftMetadata, fundNewWallet, nearBalance } from './near.js';
 import { closePosition, openPerp } from './paper.js';
 import type { Side } from './perps.js';
+import { newsData, newsFor } from './news.js';
 import { execute, prepareBuy, prepareSell, register, take, UserError } from './proposals.js';
+import { reportHoursFor, sendReport } from './reports.js';
 import { isAccountId, knownSymbols, resolveToken } from './tokens.js';
 import { fromUnits } from './units.js';
 
@@ -37,6 +39,10 @@ ${ai ? '\n💬 <b>Just talk to me in any language.</b> Ask about a token, your t
 /positions - open trades with live PnL
 /check [id] - live analysis: hold or close?
 /close &lt;id&gt;
+
+<b>Reports</b>
+/report now - trend, odds and news for your open trades
+/report &lt;hours&gt; - get one automatically every N hours (/report off to stop)
 
 Known symbols: ${knownSymbols().join(', ')}`;
 
@@ -193,7 +199,8 @@ export function createBot(db: Db, agent: Agent | null = null): Bot {
       const tech = candles.length ? technicals(candles, market.priceUsd) : null;
       const report = analyzeToken(market, tech);
       await reply(ctx, deepAnalysis(market, report, tech));
-      await aiNote(ctx, 'analysis', { market, report, technicals: tech });
+      const news = await newsFor(market.symbol, market.name, 5).catch(() => []);
+      await aiNote(ctx, 'analysis', { market, report, technicals: tech, recent_headlines: newsData(news) });
     });
   });
 
@@ -298,6 +305,39 @@ export function createBot(db: Db, agent: Agent | null = null): Bot {
         for (const p of list) data.push(await checkData(db, tgId, p!.id).catch(() => null));
         await aiNote(ctx, 'check', data.filter(Boolean));
       }
+    });
+  });
+
+  bot.command('report', async (ctx) => {
+    const tgId = ctx.from!.id;
+    const [arg] = args(ctx);
+    const a = (arg ?? '').toLowerCase();
+    if (a === 'off') {
+      db.setReportHours(tgId, 0);
+      return reply(ctx, 'Scheduled trade reports are off. /report now still works any time; /report 4 turns them back on.');
+    }
+    if (a && a !== 'now') {
+      const h = Number(a.replace(/h$/, ''));
+      if (!(h >= 1 && h <= 24)) return reply(ctx, 'Usage: /report now, /report 4 (every 4 hours, 1 to 24), or /report off');
+      db.setReportHours(tgId, h);
+      return reply(ctx, `✅ You'll get a trade report every ${h} hour${h === 1 ? '' : 's'} while you have open trades. Send /report now for one straight away.`);
+    }
+    if (!a) {
+      const h = reportHoursFor(db, tgId);
+      const status = h > 0 ? `Scheduled reports: every ${h} hour${h === 1 ? '' : 's'} while you have open trades.` : 'Scheduled reports: off.';
+      if (!db.openPositions(tgId).length) return reply(ctx, `${status}
+You have no open trades right now.
+
+/report 4 sets the interval, /report off stops them.`);
+    }
+    await guard(ctx, async () => {
+      await typing(ctx);
+      const sent = await sendReport(db, tgId, agent, async (_id, text, plain) => {
+        if (plain) await replyPlain(ctx, text);
+        else await reply(ctx, text);
+      });
+      if (!sent) return reply(ctx, 'You have no open trades to report on. Try /long NEAR 100 3');
+      if (!a) await reply(ctx, '/report 4 changes how often these arrive; /report off stops them.');
     });
   });
 

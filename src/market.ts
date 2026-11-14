@@ -91,14 +91,27 @@ export async function getMarket(address: string): Promise<MarketSnapshot> {
   };
 }
 
-/** Hourly candles, oldest first, priced in USD for `tokenAddress`. */
-export async function getCandles(poolAddress: string, tokenAddress: string, limit = 200): Promise<Candle[]> {
+/** Candles (hourly by default, or 5-minute), oldest first, priced in USD for `tokenAddress`. */
+export async function getCandles(poolAddress: string, tokenAddress: string, limit = 200, timeframe: 'hour' | '5m' = 'hour'): Promise<Candle[]> {
+  const tf = timeframe === '5m' ? 'minute?aggregate=5' : 'hour?aggregate=1';
   const r = await get<{ data: { attributes: { ohlcv_list: number[][] } } }>(
-    `/networks/${config.geckoNetwork}/pools/${encodeURIComponent(poolAddress)}/ohlcv/hour?aggregate=1&limit=${limit}&currency=usd&token=${encodeURIComponent(tokenAddress)}`,
+    `/networks/${config.geckoNetwork}/pools/${encodeURIComponent(poolAddress)}/ohlcv/${tf}&limit=${limit}&currency=usd&token=${encodeURIComponent(tokenAddress)}`,
   );
   return r.data.attributes.ohlcv_list
     .map((x) => ({ t: x[0]!, o: x[1]!, h: x[2]!, l: x[3]!, c: x[4]!, v: x[5]! }))
     .sort((a, b) => a.t - b.t);
+}
+
+/** Last ~2 days of 5-minute candles for a token's main pool ([] if unavailable). */
+export async function getCandles5m(address: string): Promise<Candle[]> {
+  const market = await getMarket(address);
+  if (!market.poolAddress) return [];
+  try {
+    return await getCandles(market.poolAddress, address, 576, '5m');
+  } catch (e) {
+    if (e instanceof MarketError) return [];
+    throw e;
+  }
 }
 
 export async function getMarketAndCandles(address: string): Promise<{ market: MarketSnapshot; candles: Candle[] }> {

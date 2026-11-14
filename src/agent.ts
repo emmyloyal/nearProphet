@@ -5,7 +5,9 @@ import { config } from './config.js';
 import type { Db } from './db.js';
 import { technicals } from './indicators.js';
 import { findToken } from './lookup.js';
+import { OpenAiCompatClient } from './llm-openai.js';
 import { getMarket, getMarketAndCandles } from './market.js';
+import { marketNews, newsData, newsFor } from './news.js';
 import { ftBalance, ftMetadata, nearBalance } from './near.js';
 import { pnlUsd } from './perps.js';
 import { prepareBuy, prepareClose, prepareOpen, prepareSell, register } from './proposals.js';
@@ -37,7 +39,7 @@ LANGUAGE
 
 WHAT YOU CAN DO
 - Look up tokens, run deep analysis, read the user's wallet and open trades, and run the live hold-or-close check, using the tools.
-- Search the web for news about a token or project when it helps (keep it to a few searches).
+- Get recent crypto headlines with get_news (and search the web if that tool is available) when news could matter. Use only headlines you actually got; never invent news.
 - Propose buys, sells, opening a long or short, and closing a trade with the propose_* tools. A proposal only shows the user a Confirm button; nothing happens unless they tap it. Never claim a trade was done.
 - Only propose a trade when the user asked for one or clearly agreed to your suggestion. Ask if the amount, token or leverage is missing; do not guess amounts.
 
@@ -78,6 +80,11 @@ const TOOLS: Anthropic.ToolUnion[] = [
     name: 'check_position',
     description: 'Live hold-or-close check for one open trade: rule-based verdict (HOLD/TAKE_PROFIT/REDUCE/CLOSE), reasons, liquidation distance, technicals.',
     input_schema: { type: 'object', properties: { position_id: { type: 'integer' } }, required: ['position_id'] },
+  },
+  {
+    name: 'get_news',
+    description: 'Recent crypto news headlines (free RSS feeds: Cointelegraph, Decrypt, The Block, CoinDesk). Give a token for news about it, or omit it for general market headlines.',
+    input_schema: { type: 'object', properties: { token: { type: 'string', description: 'Symbol or contract, optional' } } },
   },
   {
     name: 'propose_buy',
@@ -127,8 +134,8 @@ export class Agent {
   constructor(private db: Db, private client: LlmClient) {}
 
   static fromConfig(db: Db): Agent | null {
-    if (!config.anthropicKey) return null;
-    return new Agent(db, new Anthropic({ apiKey: config.anthropicKey }));
+    if (config.aiProvider === 'anthropic') return config.anthropicKey ? new Agent(db, new Anthropic({ apiKey: config.anthropicKey })) : null;
+    return config.aiApiKey && config.aiBaseUrl ? new Agent(db, new OpenAiCompatClient(config.aiBaseUrl, config.aiApiKey)) : null;
   }
 
   /** Counts one AI use; returns false when the user hit today's limit. */
@@ -153,7 +160,8 @@ export class Agent {
   }
 
   private tools(withWeb: boolean): Anthropic.ToolUnion[] {
-    return withWeb && config.aiWebSearch ? [...TOOLS, { type: 'web_search_20250305', name: 'web_search', max_uses: 3 }] : TOOLS;
+    // Web search runs on Anthropic's servers, so only the Anthropic provider has it.
+    return withWeb && config.aiWebSearch && config.aiProvider === 'anthropic' ? [...TOOLS, { type: 'web_search_20250305', name: 'web_search', max_uses: 3 }] : TOOLS;
   }
 
   /** Free-text conversation in any language. */
@@ -172,15 +180,18 @@ export class Agent {
   }
 
   /** One-shot commentary for /analyze, /check and alerts, in the user's language. */
-  async commentary(tgId: number, kind: 'analysis' | 'check' | 'alert', data: unknown): Promise<string | null> {
+  async commentary(tgId: number, kind: 'analysis' | 'check' | 'alert' | 'report', data: unknown): Promise<string | null> {
     if (!this.allow(tgId)) return null;
     const ask: Record<typeof kind, string> = {
       analysis: 'Give your read of this token in under 120 words: what matters most, the main risk, and what kind of trader it suits. You may search the web once or twice for recent news about it.',
       check: 'For each trade, explain in under 80 words whether to hold or close and why, building on the rule-based verdict (never soften an urgent one). Mention one concrete level to watch.',
       alert: 'This trade\'s verdict just changed. Write a 2-3 sentence alert: what changed, and what the user should consider doing now. Never soften an urgent verdict.',
+      report:
+        'Write a scheduled trade report to help the trader decide. For each trade: (1) what the trend (hourly and 5-minute) and the estimated odds say, (2) whether any of the given headlines matter for it (say plainly if none do; never invent news), (3) two or three concrete options with a price level each (e.g. hold with a stop at X, take partial profit near Y, close) and the trade-off of each. The trader decides; do not order them. Never soften an urgent rule verdict; put it first. The odds are estimates from recent volatility, not predictions. Under 170 words in total.',
     };
     const content = `${ask[kind]}\nReply in the user's stored language.\n\n<data>\n${JSON.stringify(data)}\n</data>`;
-    const text = await this.loop(tgId, kind === 'alert' ? config.aiFastModel : config.aiModel, [{ role: 'user', content }], kind === 'analysis' ? this.tools(true).filter((t) => 'type' in t && t.type?.startsWith('web_search')) : [], [], 600);
+    const tools = kind === 'analysis' ? this.tools(true).filter((t) => 'type' in t && t.type?.startsWith('web_search')) : [];
+    const text = await this.loop(tgId, kind === 'alert' ? config.aiFastModel : config.aiModel, [{ role: 'user', content }], tools, [], kind === 'report' ? 900 : 600);
     return stripLang(text).clean || null;
   }
 
@@ -193,6 +204,7 @@ export class Agent {
     maxTokens: number,
   ): Promise<string> {
     const convo = [...messages];
+    const allowed = new Set(tools.map((t) => ('name' in t ? String(t.name) : '')));
     for (let step = 0; step < 8; step++) {
       const res = await this.client.messages.create({
         model,
@@ -213,6 +225,7 @@ export class Agent {
         let out: unknown;
         let isError = false;
         try {
+          if (!allowed.has(block.name)) throw new Error(`Tool ${block.name} is not available here.`);
           out = await this.runTool(tgId, block.name, (block.input ?? {}) as Record<string, any>, proposals);
         } catch (e) {
           out = { error: (e as Error).message };
@@ -279,6 +292,13 @@ export class Agent {
       }
       case 'check_position':
         return await checkData(this.db, tgId, Number(a.position_id));
+      case 'get_news': {
+        if (!a.token) return { headlines: newsData(await marketNews(8)) };
+        const t = await tok();
+        const m = t.marketId ? await getMarket(t.marketId).catch(() => null) : null;
+        const items = await newsFor(m?.symbol ?? t.symbol, m?.name, 6);
+        return { token: m?.symbol ?? t.symbol, headlines: newsData(items), note: items.length ? undefined : 'No headlines mention this token in the last 3 days.' };
+      }
       case 'propose_buy':
         return this.propose(tgId, proposals, await prepareBuy(this.db, tgId, await tok(), String(a.near_amount)));
       case 'propose_sell':

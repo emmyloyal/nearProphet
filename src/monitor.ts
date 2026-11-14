@@ -7,6 +7,7 @@ import { technicals, type Technicals } from './indicators.js';
 import { getMarketAndCandles } from './market.js';
 import { closePosition } from './paper.js';
 import { isLiquidated } from './perps.js';
+import { sendDueReports } from './reports.js';
 
 export function evaluate(p: PositionRow, t: Technicals): Advice {
   return advise(
@@ -77,6 +78,13 @@ export function startMonitor(db: Db, bot: Bot, intervalSec: number, agent: Agent
       await monitorOnce(db, async (tgId, html) => {
         await bot.api.sendMessage(tgId, html, { parse_mode: 'HTML' }).catch((e) => console.error(`[monitor] notify ${tgId}: ${e.message}`));
       }, agent);
+      await sendDueReports(db, agent, async (tgId, text, plain) => {
+        const opts = plain ? { link_preview_options: { is_disabled: true } } : { parse_mode: 'HTML' as const, link_preview_options: { is_disabled: true } };
+        for (let i = 0; i < text.length; i += 4000)
+          await bot.api.sendMessage(tgId, text.slice(i, i + 4000), opts).catch((e) => console.error(`[report] notify ${tgId}: ${e.message}`));
+      });
+    } catch (e) {
+      console.error('[monitor]', (e as Error).message);
     } finally {
       running = false;
     }

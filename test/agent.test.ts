@@ -4,6 +4,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 
 process.env.MASTER_KEY = 'd'.repeat(64);
 process.env.AI_DAILY_LIMIT = '5';
+process.env.AI_PROVIDER = 'anthropic'; // these tests cover the Anthropic path, whatever .env says
 const { Agent, stripLang } = await import('../src/agent.js');
 const { Db } = await import('../src/db.js');
 const { take, execute } = await import('../src/proposals.js');

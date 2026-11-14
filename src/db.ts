@@ -10,6 +10,8 @@ export interface UserRow {
   paper_usd: number;
   created_at: number;
   lang: string | null;
+  report_hours: number | null;
+  last_report_at: number | null;
 }
 
 export interface PositionRow {
@@ -82,6 +84,18 @@ export class Db {
     `);
     const cols = (this.db.prepare('PRAGMA table_info(users)').all() as Array<{ name: string }>).map((c) => c.name);
     if (!cols.includes('lang')) this.db.exec('ALTER TABLE users ADD COLUMN lang TEXT');
+    if (!cols.includes('report_hours')) this.db.exec('ALTER TABLE users ADD COLUMN report_hours REAL');
+    if (!cols.includes('last_report_at')) this.db.exec('ALTER TABLE users ADD COLUMN last_report_at INTEGER');
+  }
+
+  /** null = use the default interval; 0 = off. */
+  setReportHours(tgId: number, hours: number | null): void {
+    this.user(tgId);
+    this.db.prepare('UPDATE users SET report_hours = ? WHERE tg_id = ?').run(hours, tgId);
+  }
+
+  markReported(tgId: number, at = Date.now()): void {
+    this.db.prepare('UPDATE users SET last_report_at = ? WHERE tg_id = ?').run(at, tgId);
   }
 
   /** Remember the language a user last wrote in (free text, e.g. "French" or "Nigerian Pidgin"). */

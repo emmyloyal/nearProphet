@@ -6,6 +6,7 @@ A Telegram bot for NEAR Protocol. It can:
 - buy and sell tokens on Ref Finance
 - open long and short trades (paper money for now)
 - watch open trades and tell you whether to hold or close
+- send scheduled trade reports: trend, estimated odds for the next 24 hours, and news
 
 It also has an **AI agent (Claude)** that takes part in every step. It chats in any language and replies in that language. It explains analyses and trades, searches the web for token news, and can propose any trade. It never moves money itself: every trade it proposes shows a Confirm button that only the user can press.
 
@@ -26,9 +27,19 @@ It also has an **AI agent (Claude)** that takes part in every step. It chats in 
 | `/positions` | Open trades with live profit and loss (PnL) |
 | `/check [id]` | Live read of a trade: **HOLD / TAKE PROFIT / REDUCE / CLOSE**, with reasons |
 | `/close <id>` | Close a trade |
+| `/report now` | Trade report for your open trades: trend, 24h odds, news, and AI options |
+| `/report <hours>` / `/report off` | Get a report automatically every 1–24 hours, or stop them |
 
 ## The AI agent
-Set `ANTHROPIC_API_KEY` in `.env` to switch it on. Without a key, the bot runs on rules only and everything else still works.
+Set one key in `.env` to switch it on. Without a key, the bot runs on rules only and everything else still works.
+
+| Provider | Key | Notes |
+|---|---|---|
+| NEAR AI Cloud | `NEAR_AI_API_KEY` | Pay per token, private inference. Offers Claude (`claude-sonnet-5-5` is sent as `anthropic/claude-sonnet-5-5`) and open models such as `deepseek/deepseek-v4.1-flash`. |
+| Anthropic | `ANTHROPIC_API_KEY` | The only provider with live web search. |
+| Any OpenAI-compatible API | `AI_PROVIDER=openai`, `AI_BASE_URL`, `AI_API_KEY` | OpenRouter, Groq, Gemini and others. |
+
+If several keys are set, NEAR AI is used. Every provider gets headlines through the `get_news` tool.
 
 | Where | What the AI does |
 |---|---|
@@ -36,6 +47,7 @@ Set `ANTHROPIC_API_KEY` in `.env` to switch it on. Without a key, the bot runs o
 | `/analyze` | Adds a plain-language read under the numbers. May search the web for recent news. |
 | `/check` | Explains hold or close for each trade, building on the rule verdict. |
 | Alerts | When a trade's verdict changes, adds a short note in the user's last language (uses the cheaper model). |
+| Reports | Explains what the trend, odds and news mean for each trade, with two or three options and a price level for each. The trader decides. |
 | Trades | Can propose buy, sell, long, short or close. The user gets a Confirm/Cancel button; proposals expire after 60s and work once. |
 
 What the AI cannot do:
@@ -60,6 +72,18 @@ When the verdict is HOLD, it also suggests a stop-loss 2 ATR behind the current 
 
 The verdict comes from fixed rules applied to the signals. It is not a guarantee.
 
+## Trade reports
+Every `REPORT_INTERVAL_HOURS` (4 by default), each trader with open trades gets a report. Users can change their interval with `/report <hours>` or turn it off with `/report off`. For each trade it shows:
+- the rule verdict and the hourly and 5-minute trend
+- **estimated odds for the next 24 hours**: the chance of touching the suggested stop, a target the same distance above (2 ATR), and liquidation; the chance of being in profit at the end; and the likely price range
+- recent headlines about the token
+
+Then the AI, if switched on, explains the options.
+
+**How the odds work.** The bot takes the last 2 days of real 5-minute price moves and replays them in random order 2,000 times over the next 24 hours. It counts how often each level is touched. The moves are de-meaned, so the odds reflect how much the price swings, not which way it has been heading; trend is shown separately. They are estimates. They cannot foresee news, hacks or sudden crashes, and they are less reliable for thin tokens.
+
+**News.** Headlines come from the free public RSS feeds of Cointelegraph, Decrypt, The Block and CoinDesk; change them with `NEWS_FEEDS`. These feeds hold only the latest stories, roughly the last day or two, so smaller tokens are often not mentioned. The report then says there is no token news and the AI uses general market headlines. Headlines are third-party text: they are escaped before display, and the AI treats them as data, not instructions.
+
 ## Project layout
 ```
 src/
@@ -74,7 +98,11 @@ src/
   indicators.ts EMA, RSI, MACD, ATR
   analysis.ts   token safety score and market bias
   advisor.ts    hold/close verdict for a trade (rules)
+  forecast.ts   24h odds from 5-minute price moves (bootstrap Monte Carlo)
+  news.ts       headlines from free crypto RSS feeds
+  reports.ts    scheduled and on-demand trade reports
   agent.ts      AI agent: chat, tools, commentary, trade proposals
+  llm-openai.ts lets the agent use NEAR AI or any OpenAI-compatible API
   proposals.ts  confirm-before-execute for every money action
   lookup.ts     symbol or name -> token
   perps.ts      leverage maths: liquidation price, PnL, fees
@@ -92,21 +120,22 @@ npm install
 cp .env.example .env
 npm run genkey          # paste the output into MASTER_KEY
 # put your @BotFather token in BOT_TOKEN
-# optional: put your Anthropic key in ANTHROPIC_API_KEY to switch on the AI agent
+# optional: put a NEAR AI key in NEAR_AI_API_KEY (or an Anthropic key in ANTHROPIC_API_KEY) to switch on the AI agent
 npm start
 ```
 To get test NEAR, send funds from https://near-faucet.io to the address `/wallet` shows.
 
 ## Tests
 `npm test`
-All 21 tests pass. They cover:
+All 27 tests pass. They cover:
 - the maths: units, indicators, leverage, the paper venue
 - security: encryption and wallets
 - the logic: hold/close rules, token analysis, market data parsing
 - end-to-end bot flows with fake Telegram, market and NEAR network
 - the AI agent with a fake model: proposals, languages, limits, alerts
+- the NEAR AI (OpenAI-compatible) translation, news parsing and matching, the odds, and trade reports and their schedule
 
-`npm run smoke` checks the live services without keys or transactions: GeckoTerminal prices, candles and search, the NEAR RPC, and a Ref Finance quote on the configured network.
+`npm run smoke` checks the live services without keys or transactions: GeckoTerminal prices, hourly and 5-minute candles and search, live 24h odds, the news feeds, the NEAR RPC, and a Ref Finance quote on the configured network.
 
 **Not tested yet:** live Ref swaps (sending a transaction), Telegram itself and real Claude replies. Run `/buy REF 0.5` on testnet first, then chat with the bot in a couple of languages.
 
