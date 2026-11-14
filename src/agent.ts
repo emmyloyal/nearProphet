@@ -3,6 +3,7 @@ import { advise } from './advisor.js';
 import { analyzeToken } from './analysis.js';
 import { config } from './config.js';
 import type { Db } from './db.js';
+import { buildHistory } from './history.js';
 import { technicals } from './indicators.js';
 import { findToken } from './lookup.js';
 import { OpenAiCompatClient } from './llm-openai.js';
@@ -80,6 +81,11 @@ const TOOLS: Anthropic.ToolUnion[] = [
     name: 'check_position',
     description: 'Live hold-or-close check for one open trade: rule-based verdict (HOLD/TAKE_PROFIT/REDUCE/CLOSE), reasons, liquidation distance, technicals.',
     input_schema: { type: 'object', properties: { position_id: { type: 'integer' } }, required: ['position_id'] },
+  },
+  {
+    name: 'get_history',
+    description: "The user's closed trades (with PnL, how long held, liquidations), win/loss totals, total PnL and recent on-chain swaps.",
+    input_schema: { type: 'object', properties: { limit: { type: 'integer', description: 'How many recent closed trades, 1-30 (default 10)' } } },
   },
   {
     name: 'get_news',
@@ -294,6 +300,8 @@ export class Agent {
       }
       case 'check_position':
         return await checkData(this.db, tgId, Number(a.position_id));
+      case 'get_history':
+        return (await buildHistory(this.db, tgId, Number(a.limit) || 10)).data;
       case 'get_news': {
         if (!a.token) return { headlines: newsData(await marketNews(8)) };
         const t = await tok();

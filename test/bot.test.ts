@@ -158,6 +158,19 @@ test('bot: long -> check -> monitor alert -> close; liquidation', async () => {
   // Collateral typed with $ and commas, as the usage hint shows it
   assert.match(await say('/long NEAR $1,000 2x', 78), /Opened #3 WNEAR LONG 2x[\s\S]*\$1000\.00 collateral/);
   assert.match(await say('/close 3', 78), /#3/);
+
+  // History: one liquidated long (-$100), one winning short (+$40)
+  const h = await say('/history');
+  assert.match(h, /Long\/short \(paper\)<\/b>: 2 closed \| 1 won, 1 lost \(50% wins\), 1 liquidated/);
+  assert.match(h, /Total PnL: <b>-\$60\.00<\/b>/);
+  assert.match(h, /Best \+\$40\.00 \| Worst -\$100\.00/);
+  assert.match(h, /🟢 #2 WNEAR SHORT 2x: \$1\.5000 → \$1\.3500 {2}<b>\+\$40\.00<\/b> \+20\.0%/);
+  assert.match(h, /💥 #1 WNEAR LONG 5x[\s\S]*liquidated/);
+  assert.ok(h.indexOf('#2 WNEAR') < h.indexOf('#1 WNEAR'), 'most recent first');
+  assert.doesNotMatch(h, /#3/, "another user's trade is not shown");
+  assert.match(await say('/history 1'), /Showing 1 of 2\. \/history 2 shows more/);
+  assert.match(await say('/history abc'), /Usage/);
+  assert.match(await say('/history', 4242), /No closed trades or swaps yet/);
 });
 
 test('bot: free text without an AI key points to /help; unknown commands handled', async () => {

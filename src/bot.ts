@@ -5,6 +5,7 @@ import { analyzeToken } from './analysis.js';
 import { config } from './config.js';
 import type { Db } from './db.js';
 import { deepAnalysis, DISCLAIMER, esc, positionLine, positionReport, price, signed, tokenInfo } from './format.js';
+import { buildHistory } from './history.js';
 import { technicals } from './indicators.js';
 import { findToken } from './lookup.js';
 import { getMarket, getMarketAndCandles, MarketError } from './market.js';
@@ -39,6 +40,7 @@ ${ai ? '\n💬 <b>Just talk to me in any language.</b> Ask about a token, your t
 /positions - open trades with live PnL
 /check [id] - live analysis: hold or close?
 /close &lt;id&gt;
+/history - closed trades, wins/losses and total PnL
 
 <b>Reports</b>
 /report now - trend, odds and news for your open trades
@@ -305,6 +307,15 @@ export function createBot(db: Db, agent: Agent | null = null): Bot {
         for (const p of list) data.push(await checkData(db, tgId, p!.id).catch(() => null));
         await aiNote(ctx, 'check', data.filter(Boolean));
       }
+    });
+  });
+
+  bot.command('history', async (ctx) => {
+    const [n] = args(ctx);
+    if (n && !/^\d{1,2}$/.test(n)) return reply(ctx, 'Usage: /history  or  /history 20  (up to 30 trades)');
+    await guard(ctx, async () => {
+      const h = await buildHistory(db, ctx.from!.id, n ? Number(n) : 10);
+      await reply(ctx, h.html);
     });
   });
 

@@ -27,6 +27,7 @@ It also has an **AI agent (Claude)** that takes part in every step. It chats in 
 | `/positions` | Open trades with live profit and loss (PnL) |
 | `/check [id]` | Live read of a trade: **HOLD / TAKE PROFIT / REDUCE / CLOSE**, with reasons |
 | `/close <id>` | Close a trade |
+| `/history [n]` | Closed trades (newest first), wins and losses, total PnL, best and worst, and recent swaps with explorer links. Shows 10 by default, up to 30 |
 | `/report now` | Trade report for your open trades: trend, 24h odds, news, and AI options |
 | `/report <hours>` / `/report off` | Get a report automatically every 1–24 hours, or stop them |
 

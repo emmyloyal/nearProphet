@@ -21,6 +21,8 @@ await bot.api.setMyCommands([
   { command: 'positions', description: 'Open trades and PnL' },
   { command: 'check', description: 'Hold or close? Live analysis' },
   { command: 'close', description: 'Close a trade' },
+  { command: 'history', description: 'Closed trades and total PnL' },
+  { command: 'report', description: 'Trend, odds and news for your trades' },
   { command: 'help', description: 'All commands' },
 ]);
 

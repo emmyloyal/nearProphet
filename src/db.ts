@@ -34,6 +34,30 @@ export interface PositionRow {
   closed_at: number | null;
 }
 
+export interface PositionStats {
+  kind: 'perp' | 'spot';
+  trades: number;
+  wins: number;
+  losses: number;
+  liquidations: number;
+  total_pnl: number;
+  best: number | null;
+  worst: number | null;
+  total_collateral: number;
+}
+
+export interface TradeRow {
+  id: number;
+  tg_id: number;
+  action: string;
+  token_in: string;
+  token_out: string;
+  amount_in: string;
+  amount_out: string;
+  tx_hash: string | null;
+  at: number;
+}
+
 export class Db {
   private db: DatabaseSync;
 
@@ -164,6 +188,30 @@ export class Db {
     this.db
       .prepare('INSERT INTO trades (tg_id, action, token_in, token_out, amount_in, amount_out, tx_hash, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
       .run(t.tg_id, t.action, t.token_in, t.token_out, t.amount_in, t.amount_out, t.tx_hash, Date.now());
+  }
+
+  /** Closed and liquidated positions, most recent first. */
+  closedPositions(tgId: number, limit = 10): PositionRow[] {
+    return this.db
+      .prepare("SELECT * FROM positions WHERE tg_id = ? AND status != 'open' ORDER BY closed_at DESC, id DESC LIMIT ?")
+      .all(tgId, limit) as unknown as PositionRow[];
+  }
+
+  /** Totals over all closed positions, per kind (paper perp vs tracked spot). */
+  positionStats(tgId: number): PositionStats[] {
+    return this.db
+      .prepare(
+        `SELECT kind, COUNT(*) AS trades, SUM(pnl > 0) AS wins, SUM(pnl < 0) AS losses,
+                SUM(status = 'liquidated') AS liquidations, COALESCE(SUM(pnl), 0) AS total_pnl,
+                MAX(pnl) AS best, MIN(pnl) AS worst, COALESCE(SUM(collateral), 0) AS total_collateral
+         FROM positions WHERE tg_id = ? AND status != 'open' GROUP BY kind ORDER BY kind`,
+      )
+      .all(tgId) as unknown as PositionStats[];
+  }
+
+  /** On-chain swaps, most recent first. */
+  recentTrades(tgId: number, limit = 5): TradeRow[] {
+    return this.db.prepare('SELECT * FROM trades WHERE tg_id = ? ORDER BY at DESC, id DESC LIMIT ?').all(tgId, limit) as unknown as TradeRow[];
   }
 
   /** Run fn atomically. */
