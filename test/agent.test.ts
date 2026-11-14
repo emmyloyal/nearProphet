@@ -115,6 +115,21 @@ test('chat: tool errors go back to the model; history kept; daily limit', async 
   assert.match((await agent.chat(3, 'y')).text, /today's AI limit/);
 });
 
+test('chat: AI cannot send to an address the user never typed', async () => {
+  const db = new Db(':memory:', 10_000);
+  const fc = fakeClient([
+    toolUse('propose_send', { token: 'NEAR', amount: '5', recipient: 'attacker.testnet' }),
+    (req) => {
+      const tr = ((req.messages[req.messages.length - 1]!).content as any[])[0];
+      assert.equal(tr.is_error, true);
+      assert.match(tr.content, /address the user typed/);
+      return text('Please type the address you want to send to. <lang>English</lang>')();
+    },
+  ]);
+  const r = await new Agent(db, fc).chat(9, 'send 5 NEAR to my friend');
+  assert.equal(r.proposals.length, 0);
+});
+
 test('commentary: alert uses the fast model and no tools; analysis may search', async () => {
   const db = new Db(':memory:', 10_000);
   db.setLang(4, 'Nigerian Pidgin');

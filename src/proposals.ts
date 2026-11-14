@@ -4,10 +4,11 @@ import { config } from './config.js';
 import type { Db } from './db.js';
 import { esc, positionLine, price, signed } from './format.js';
 import { getMarket } from './market.js';
-import { ftBalance, ftMetadata, nearBalance, signerAccount, withUserLock } from './near.js';
+import { ftBalance, ftMetadata, nearBalance, signerAccount, storageNeeded, withUserLock } from './near.js';
 import { closePosition, openPerp } from './paper.js';
 import { fee, liquidationPrice, type Side } from './perps.js';
 import { buyWithNear, quoteRoute, type Quote, sellForNear, swapTokens } from './ref.js';
+import { normalizeRecipient, recipientProblem, SEND_RESERVE, sendNear, sendToken } from './send.js';
 import { noMarketReason, notTradableReason, TOKEN_NOT_FOUND } from './lookup.js';
 import type { TokenRef } from './tokens.js';
 import { fromUnits, toUnits } from './units.js';
@@ -22,6 +23,7 @@ export type Proposal =
   | { kind: 'buy'; token: TokenRef; q: Quote; decimals: number; nearAmount: string; symbol: string }
   | { kind: 'sell'; token: TokenRef; q: Quote; decimals: number; sellAll: boolean; symbol: string }
   | { kind: 'swap'; from: TokenRef; to: TokenRef; q: Quote; decIn: number; decOut: number; symIn: string; symOut: string; sellAll: boolean }
+  | { kind: 'send'; token: TokenRef; native: boolean; to: string; amount: bigint; decimals: number; symbol: string; sendAll: boolean }
   | { kind: 'open'; side: Side; token: TokenRef; symbol: string; collateral: number; leverage: number }
   | { kind: 'close'; positionId: number };
 
@@ -91,17 +93,18 @@ export async function prepareSell(db: Db, tgId: number, token: TokenRef | null, 
   };
 }
 
-/** "12.5" or "50%" of the balance, in the token's smallest units. */
-function amountFromInput(amount: string, bal: bigint, meta: { decimals: number; symbol: string }): bigint {
+/** "12.5", "50%" or "all" of the balance, in the token's smallest units. */
+function amountFromInput(amount: string, bal: bigint, meta: { decimals: number; symbol: string }, held = 'You only hold'): bigint {
   let amountIn: bigint;
   const pm = /^(\d+(?:\.\d+)?)%$/.exec(amount.trim());
-  if (pm) {
+  if (/^(all|max)$/i.test(amount.trim())) amountIn = bal;
+  else if (pm) {
     const pct = Number(pm[1]);
     if (!(pct > 0 && pct <= 100)) throw new UserError('Percent must be between 0 and 100.');
     amountIn = (bal * BigInt(Math.round(pct * 100))) / 10_000n;
   } else amountIn = toUnits(amount.replace(/,/g, ''), meta.decimals);
   if (amountIn <= 0n) throw new UserError(bal > 0n ? 'Amount must be more than zero.' : `You hold no ${meta.symbol}.`);
-  if (amountIn > bal) throw new UserError(`You only hold ${fromUnits(bal, meta.decimals)} ${meta.symbol}.`);
+  if (amountIn > bal) throw new UserError(`${held} ${fromUnits(bal, meta.decimals)} ${meta.symbol}.`);
   return amountIn;
 }
 
@@ -145,6 +148,53 @@ async function checkTradeSize(t: TokenRef, amount: number): Promise<void> {
   if (!tok || !near || !(near.priceUsd > 0)) return;
   const inNear = (amount * tok.priceUsd) / near.priceUsd;
   if (inNear > config.maxTradeNear) throw new UserError(`Max per trade is ${config.maxTradeNear} NEAR (this is about ${inNear.toFixed(1)} NEAR).`);
+}
+
+/**
+ * Send NEAR or a token from the bot wallet to another address. Transfers cannot be undone, so the
+ * recipient is checked (format, network, exists on-chain) and shown in full on the Confirm screen.
+ */
+export async function prepareSend(db: Db, tgId: number, token: TokenRef | null, amount: string, recipient: string): Promise<{ p: Proposal; summary: string }> {
+  const user = db.user(tgId);
+  if (!user.account_id) throw new UserError('Create a wallet first with /wallet.');
+  if (!token) throw new UserError(TOKEN_NOT_FOUND);
+  if (!token.tradeId) throw new UserError(notTradableReason(token)!);
+  const to = normalizeRecipient(recipient);
+  const problem = recipientProblem(to, user.account_id);
+  if (problem) throw new UserError(problem);
+  if (to === token.tradeId) throw new UserError(`${to} is the token contract itself, not a wallet. Anything sent there would be lost.`);
+  const [avail, toBal] = await Promise.all([nearBalance(user.account_id), nearBalance(to)]);
+  if (avail === null) throw new UserError('Your wallet is not active yet. Fund it first (/wallet).');
+  const implicit = /^([0-9a-f]{64}|0x[0-9a-f]{40})$/.test(to);
+  if (toBal === null && !implicit) throw new UserError(`${to} does not exist on ${config.network}. Check the spelling.`);
+  const fresh = toBal === null ? '\nℹ️ This address has never been used. Make sure it is right.' : '';
+  const warn = '\n\n⚠️ Transfers cannot be undone. Check the address carefully.';
+
+  if (token.tradeId === config.wrapContract) {
+    const spendable = avail > SEND_RESERVE ? avail - SEND_RESERVE : 0n;
+    const amt = amountFromInput(amount, spendable, { decimals: 24, symbol: 'NEAR' }, 'You can send at most');
+    if (amt > nearToYocto(String(config.maxTradeNear) as `${number}`)) throw new UserError(`Max per send is ${config.maxTradeNear} NEAR.`);
+    return {
+      p: { kind: 'send', token, native: true, to, amount: amt, decimals: 24, symbol: 'NEAR', sendAll: false },
+      summary: `<b>Confirm send</b>
+Send: <b>${fromUnits(amt, 24)} NEAR</b>
+To: <code>${esc(to)}</code>
+Network: ${config.network}${fresh}${warn}`,
+    };
+  }
+
+  const [meta, bal, storage] = await Promise.all([ftMetadata(token.tradeId), ftBalance(token.tradeId, user.account_id), storageNeeded(token.tradeId, to)]);
+  const amt = amountFromInput(amount, bal, meta);
+  await checkTradeSize(token, Number(fromUnits(amt, meta.decimals, 8)));
+  const reg = storage > 0n ? `
+Plus ${fromUnits(storage, 24)} NEAR to register the recipient for ${esc(meta.symbol)} (one-time)` : '';
+  return {
+    p: { kind: 'send', token, native: false, to, amount: amt, decimals: meta.decimals, symbol: meta.symbol, sendAll: amt === bal },
+    summary: `<b>Confirm send</b>
+Send: <b>${fromUnits(amt, meta.decimals)} ${esc(meta.symbol)}</b>
+To: <code>${esc(to)}</code>${reg}
+Network: ${config.network}${fresh}${warn}`,
+  };
 }
 
 export async function prepareOpen(
@@ -191,6 +241,8 @@ export async function execute(db: Db, tgId: number, p: Proposal): Promise<string
     case 'sell':
     case 'swap':
       return executeSwap(db, tgId, p);
+    case 'send':
+      return executeSend(db, tgId, p);
     case 'open': {
       const m = await getMarket(p.token.marketId!);
       const pos = openPerp(db, {
@@ -273,6 +325,26 @@ async function executeSwap(db: Db, tgId: number, p: Extract<Proposal, { kind: 'b
   }
   await closeTracked(db, tgId, p.sellAll ? p.token.marketId : null);
   return `✅ Sold for ${fromUnits(res.received, 24)} NEAR.${explorer}`;
+}
+
+async function executeSend(db: Db, tgId: number, p: Extract<Proposal, { kind: 'send' }>): Promise<string> {
+  const res = await withUserLock(tgId, async () => {
+    const account = signerAccount(db.user(tgId));
+    return p.native ? sendNear(account, p.to, p.amount) : sendToken(account, p.token.tradeId!, p.to, p.amount);
+  });
+  db.logTrade({
+    tg_id: tgId,
+    action: 'send',
+    token_in: p.native ? config.wrapContract : p.token.tradeId!,
+    token_out: p.to,
+    amount_in: p.amount.toString(),
+    amount_out: p.amount.toString(),
+    tx_hash: res.txHash,
+  });
+  if (p.sendAll) await closeTracked(db, tgId, p.token.marketId);
+  const explorer = res.txHash ? `
+https://${config.network === 'testnet' ? 'testnet.' : ''}nearblocks.io/txns/${res.txHash}` : '';
+  return `✅ Sent ${fromUnits(p.amount, p.decimals)} ${p.symbol} to ${p.to}.${explorer}`;
 }
 
 /** After selling all of a token, stop tracking it as a spot position. */

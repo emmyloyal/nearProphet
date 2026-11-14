@@ -14,7 +14,7 @@ import { createWalletFor, exportKey, ftBalance, ftMetadata, fundNewWallet, nearB
 import { closePosition, openPerp } from './paper.js';
 import type { Side } from './perps.js';
 import { newsData, newsFor } from './news.js';
-import { execute, prepareBuy, prepareSell, prepareSwap, register, take, UserError } from './proposals.js';
+import { execute, prepareBuy, prepareSell, prepareSend, prepareSwap, register, take, UserError } from './proposals.js';
 import { reportHoursFor, sendReport } from './reports.js';
 import { isAccountId, knownSymbols, resolveToken } from './tokens.js';
 import { fromUnits } from './units.js';
@@ -25,6 +25,7 @@ ${ai ? '\n💬 <b>Just talk to me in any language.</b> Ask about a token, your t
 /wallet - create or view your bot wallet and balances
 /export - show your private key (private chat only)
 /connect &lt;account&gt; - watch a wallet you own (read-only)
+/send &lt;amount or all&gt; &lt;token&gt; &lt;address&gt; - send NEAR or a token to someone
 
 <b>Research</b>
 /token &lt;symbol or contract&gt; - price, liquidity, volume
@@ -242,6 +243,26 @@ export function createBot(db: Db, agent: Agent | null = null): Bot {
     await guard(ctx, async () => {
       const [f, t] = await Promise.all([findToken(from!), findToken(to!)]);
       const { p, summary } = await prepareSwap(db, ctx.from!.id, f, t, amt!);
+      return reply(ctx, summary, { reply_markup: confirmKb(register(ctx.from!.id, p)) });
+    });
+  });
+
+  bot.command('send', async (ctx) => {
+    if (!(await privateOnly(ctx))) return;
+    // Accept "/send 2 NEAR alice.testnet", "/send 2 NEAR to alice.testnet", "/send REF 50% bob.testnet" and "/send 2 alice.testnet" (NEAR)
+    const a = args(ctx).filter((x) => !/^(to|->|→)$/i.test(x));
+    const isAmount = (x: string) => /^([\d.,]+%?|all|max)$/i.test(x);
+    let amt: string | undefined, sym: string | undefined, to: string | undefined;
+    if (a.length === 3 && isAmount(a[0]!)) [amt, sym, to] = a;
+    else if (a.length === 3 && isAmount(a[1]!)) [sym, amt, to] = a;
+    else if (a.length === 2 && isAmount(a[0]!) && !knownSymbols().includes(a[1]!.toUpperCase())) [amt, sym, to] = [a[0], 'NEAR', a[1]];
+    if (!amt || !sym || !to)
+      return reply(ctx, `Usage: /send 2 NEAR friend.${config.network === 'testnet' ? 'testnet' : 'near'}
+       /send 50% REF friend.${config.network === 'testnet' ? 'testnet' : 'near'}
+       /send all USDC &lt;address&gt;
+You always see a Confirm screen first.`);
+    await guard(ctx, async () => {
+      const { p, summary } = await prepareSend(db, ctx.from!.id, await findToken(sym!), amt!, to!);
       return reply(ctx, summary, { reply_markup: confirmKb(register(ctx.from!.id, p)) });
     });
   });

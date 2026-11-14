@@ -238,3 +238,16 @@ test('swap routes: one Ref message, later hops chain the previous output, slippa
   const one = JSON.parse(swapMsg({ poolId: 2, tokenIn: 'a.near', tokenOut: 'b.near', amountIn: 5n, amountOut: 4n, minOut: 3n, hops: [{ poolId: 2, tokenIn: 'a.near', tokenOut: 'b.near' }] }));
   assert.deepEqual(one.actions, [{ pool_id: 2, token_in: 'a.near', token_out: 'b.near', amount_in: '5', min_amount_out: '3' }]);
 });
+
+test('send recipients: format, network, own wallet and contracts are checked before any quote', async () => {
+  const { normalizeRecipient, recipientProblem } = await import('../src/send.js');
+  const me = 'a'.repeat(64);
+  assert.equal(normalizeRecipient(' @Alice.Testnet. '), 'alice.testnet');
+  assert.equal(recipientProblem('alice.testnet', me), null);
+  assert.equal(recipientProblem('b'.repeat(64), me), null, 'implicit address');
+  assert.equal(recipientProblem('0x' + 'c'.repeat(40), me), null, 'eth-implicit address');
+  assert.match(recipientProblem(me, me)!, /your own/);
+  assert.match(recipientProblem('alice.near', me)!, /testnet/);
+  assert.match(recipientProblem('not valid!', me)!, /not a valid/);
+  assert.match(recipientProblem('wrap.testnet', me)!, /contract/);
+});

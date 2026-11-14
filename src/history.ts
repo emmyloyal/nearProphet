@@ -53,11 +53,13 @@ async function amount(raw: string, contract: string): Promise<string> {
 }
 
 async function swapLine(t: TradeRow, now: number): Promise<{ html: string; data: Record<string, unknown> }> {
-  const [inAmt, outAmt] = await Promise.all([amount(t.amount_in, t.token_in), amount(t.amount_out, t.token_out)]);
+  const send = t.action === 'send'; // token_out holds the recipient
+  const [inAmt, outAmt] = await Promise.all([amount(t.amount_in, t.token_in), send ? '' : amount(t.amount_out, t.token_out)]);
   const inSym = symbolOf(t.token_in);
-  const outSym = symbolOf(t.token_out);
-  const text =
-    t.action === 'buy'
+  const outSym = send ? '' : symbolOf(t.token_out);
+  const text = send
+    ? `Sent ${inAmt} ${inSym} to ${symbolOf(t.token_out)}`
+    : t.action === 'buy'
       ? `Bought ${outAmt} ${outSym} for ${inAmt} ${inSym}`
       : t.action === 'swap'
         ? `Swapped ${inAmt} ${inSym} for ${outAmt} ${outSym}`

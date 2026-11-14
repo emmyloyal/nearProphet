@@ -110,6 +110,7 @@ nearProphet puts the whole loop into one Telegram chat: **research → trade →
 | 👀 | **Watch your own wallet** read-only. The bot never asks for its key. | `/connect` |
 | 🔎 | **Token research:** price, liquidity, volume, buys/sells, market bias, a 0–100 safety score and risk flags. Works with any NEAR token: type a symbol, or paste a contract address, a NearBlocks or Rhea link, or the `0x` address of a bridged Ethereum token. | `/token`, `/analyze` |
 | 🔁 | **Spot swaps on Ref Finance** with a live quote, slippage protection and an explorer link. Swap **any token for another** in one transaction, routed through NEAR when there's no direct pool. | `/buy`, `/sell`, `/swap` |
+| 📤 | **Send** NEAR or any token to a friend or another wallet. The address is checked first, and the AI can only send to an address you typed yourself. | `/send` |
 | 📈 | **Long/short with leverage** at live prices, with liquidation price and fees. Paper money for now. | `/long`, `/short`, `/close` |
 | 🛡 | **Hold-or-close verdict** for every trade, with reasons and a suggested stop-loss. | `/check`, `/positions` |
 | 🔔 | **5-minute monitor:** alerts when a verdict changes, and automatic liquidation of paper trades. | automatic |
@@ -244,6 +245,7 @@ deploy/          Linux server and Windows PC scripts
 | `/wallet` | Create or view your bot wallet, balances and paper balance |
 | `/export` | Show your private key (private chat only; the message deletes itself after 60s) |
 | `/connect <account>` | Watch a wallet you already own, read-only |
+| `/send <amount, 50% or all> <token> <address>` | Send NEAR or any token to another address, e.g. `/send 2 NEAR friend.testnet`. Checks the address exists, pays the recipient's token registration if needed, and always asks you to Confirm |
 | `/token <symbol, contract or link>` | Price, 1h/6h/24h change, market cap, liquidity, volume, buys and sells |
 | `/analyze <symbol, contract or link>` | Deep analysis: market bias, safety score, risk flags, technicals, AI read |
 | `/buy <token> <NEAR>` | Quote, then Confirm. Swaps on Ref Finance |
