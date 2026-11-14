@@ -26,7 +26,10 @@ export class OpenAiCompatClient implements LlmClient {
     create: async (p: Anthropic.MessageCreateParamsNonStreaming): Promise<Anthropic.Message> => {
       const body: Record<string, unknown> = {
         model: p.model,
-        max_tokens: p.max_tokens,
+        // Reasoning models (e.g. Claude on NEAR AI) spend hidden thinking tokens out of max_tokens, which
+        // cut replies short or left them empty. Give room; only tokens actually used are billed, and the
+        // prompts' word limits keep the visible answer short.
+        max_tokens: Math.min(16_000, Math.max(p.max_tokens * 4, 4_000)),
         messages: toOpenAi(p),
       };
       const tools = (p.tools ?? []).filter((t): t is Anthropic.Tool => 'input_schema' in t);

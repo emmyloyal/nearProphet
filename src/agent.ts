@@ -161,7 +161,7 @@ export class Agent {
     const u = this.db.user(tgId);
     return [
       { type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } },
-      { type: 'text', text: `User's stored language: ${u.lang ?? 'unknown'}. Known symbols: ${knownSymbols().join(', ')}. Today: ${new Date().toISOString().slice(0, 10)}.` },
+      { type: 'text', text: `User's stored language: ${u.lang ?? 'unknown'}. In a chat, the language of the user's LATEST message always wins over this stored value (e.g. a message in Pidgin gets a Pidgin reply even if the stored language is English); use the stored language only when the message language is unclear or for one-shot reports and alerts. Known symbols: ${knownSymbols().join(', ')}. Today: ${new Date().toISOString().slice(0, 10)}.` },
     ];
   }
 
