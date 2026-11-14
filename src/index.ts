@@ -16,6 +16,7 @@ await bot.api.setMyCommands([
   { command: 'analyze', description: 'Deep token analysis' },
   { command: 'buy', description: 'Buy a token with NEAR' },
   { command: 'sell', description: 'Sell a token for NEAR' },
+  { command: 'swap', description: 'Swap one token for another' },
   { command: 'long', description: 'Open a long' },
   { command: 'short', description: 'Open a short' },
   { command: 'positions', description: 'Open trades and PnL' },

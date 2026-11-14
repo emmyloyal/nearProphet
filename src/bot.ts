@@ -14,7 +14,7 @@ import { createWalletFor, exportKey, ftBalance, ftMetadata, fundNewWallet, nearB
 import { closePosition, openPerp } from './paper.js';
 import type { Side } from './perps.js';
 import { newsData, newsFor } from './news.js';
-import { execute, prepareBuy, prepareSell, register, take, UserError } from './proposals.js';
+import { execute, prepareBuy, prepareSell, prepareSwap, register, take, UserError } from './proposals.js';
 import { reportHoursFor, sendReport } from './reports.js';
 import { isAccountId, knownSymbols, resolveToken } from './tokens.js';
 import { fromUnits } from './units.js';
@@ -33,6 +33,7 @@ ${ai ? '\n💬 <b>Just talk to me in any language.</b> Ask about a token, your t
 <b>Spot</b>
 /buy &lt;token&gt; &lt;NEAR to spend&gt;
 /sell &lt;token&gt; &lt;amount or 50%&gt;
+/swap &lt;amount or 50%&gt; &lt;from&gt; &lt;to&gt; - token for token, one transaction
 
 <b>Long / short</b> (paper money for now)
 /long &lt;token&gt; &lt;collateral $&gt; &lt;leverage&gt;
@@ -225,6 +226,22 @@ export function createBot(db: Db, agent: Agent | null = null): Bot {
     if (!sym || !amt) return reply(ctx, 'Usage: /sell REF 50%   or   /sell REF 12.5');
     await guard(ctx, async () => {
       const { p, summary } = await prepareSell(db, ctx.from!.id, await findToken(sym), amt);
+      return reply(ctx, summary, { reply_markup: confirmKb(register(ctx.from!.id, p)) });
+    });
+  });
+
+  bot.command('swap', async (ctx) => {
+    if (!(await privateOnly(ctx))) return;
+    // Accept "/swap 10 REF USDC", "/swap 10 REF to USDC" and "/swap REF USDC 10"
+    const a = args(ctx).filter((x) => !/^(to|for|->|→)$/i.test(x));
+    const isAmount = (x: string) => /^[\d.,]+%?$/.test(x);
+    let amt: string | undefined, from: string | undefined, to: string | undefined;
+    if (a.length === 3 && isAmount(a[0]!)) [amt, from, to] = a;
+    else if (a.length === 3 && isAmount(a[2]!)) [from, to, amt] = a;
+    if (!amt || !from || !to) return reply(ctx, 'Usage: /swap 10 REF USDC   or   /swap 50% REF USDC\nSwaps one token for another in one transaction on Ref Finance.');
+    await guard(ctx, async () => {
+      const [f, t] = await Promise.all([findToken(from!), findToken(to!)]);
+      const { p, summary } = await prepareSwap(db, ctx.from!.id, f, t, amt!);
       return reply(ctx, summary, { reply_markup: confirmKb(register(ctx.from!.id, p)) });
     });
   });

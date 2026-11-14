@@ -6,13 +6,15 @@
   <a href="https://t.me/NearProphetbot"><img src="https://img.shields.io/badge/Telegram-@NearProphetbot-26A5E4?logo=telegram&logoColor=white" alt="Telegram"></a>
   <img src="https://img.shields.io/badge/NEAR-testnet-00EC97" alt="NEAR testnet">
   <img src="https://img.shields.io/badge/AI-NEAR%20AI%20Cloud-3a8ee6" alt="NEAR AI Cloud">
-  <img src="https://img.shields.io/badge/tests-28%20passing-2ea44f" alt="28 tests passing">
+  <img src="https://img.shields.io/badge/tests-29%20passing-2ea44f" alt="29 tests passing">
   <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" alt="TypeScript strict">
 </p>
 
 **nearProphet** is a Telegram bot for trading NEAR Protocol tokens. It works like a co-pilot: it reads the market, checks your open trades every 5 minutes, warns you before liquidation, and explains every decision in the language you write in, including Nigerian Pidgin. It never moves your money on its own: every trade needs your tap on **Confirm**.
 
 **Try it:** open [@NearProphetbot](https://t.me/NearProphetbot) in Telegram and send `/start`.
+
+> **Also by the same author: [SwarmCompute](https://github.com/emmyloyal/swarmcompute)** ([live app](https://swarmcompute.vercel.app)). A GPU marketplace on NEAR testnet where AI agents team up to buy compute and sellers compete in a sealed-bid auction. Every buyer in a group pays the same fair price, held in on-chain escrow until delivery is verified.
 
 ---
 
@@ -80,6 +82,22 @@ nearProphet puts the whole loop into one Telegram chat: **research → trade →
       <img src="docs/images/history.svg" alt="/history output" width="100%">
     </td>
   </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <b>Swap any token for another</b><br>
+      <sub>Live quotes from Ref Finance's mainnet pools (read-only). With no direct pool, the bot routes through NEAR, and both hops run in <b>one transaction</b>.</sub><br><br>
+      <img src="docs/images/swap.svg" alt="/swap quotes with route and Confirm button" width="100%">
+    </td>
+    <td width="50%" valign="top">
+      <b>How a swap is routed</b><br><br>
+      <code>/swap 250 REF USDC</code><br><br>
+      1. The bot asks Ref Finance for a <b>direct</b> REF/USDC quote.<br>
+      2. It also prices <b>REF → NEAR → USDC</b> across two pools.<br>
+      3. It picks whichever pays more and shows you the route, the expected amount and the minimum after slippage.<br>
+      4. On <b>Confirm</b>, both hops go into one Ref transaction. Only the last hop enforces the minimum, so a bad price makes the whole swap fail and you keep your tokens.<br><br>
+      Works with symbols, contract addresses, links and <code>50%</code> amounts, and the AI can propose it too ("swap half my REF to USDC").
+    </td>
+  </tr>
 </table>
 
 ---
@@ -91,7 +109,7 @@ nearProphet puts the whole loop into one Telegram chat: **research → trade →
 | 👛 | **Instant wallet.** A NEAR implicit account is created for each user and its key is encrypted with AES-256-GCM. | `/wallet`, `/export` |
 | 👀 | **Watch your own wallet** read-only. The bot never asks for its key. | `/connect` |
 | 🔎 | **Token research:** price, liquidity, volume, buys/sells, market bias, a 0–100 safety score and risk flags. Works with any NEAR token: type a symbol, or paste a contract address, a NearBlocks or Rhea link, or the `0x` address of a bridged Ethereum token. | `/token`, `/analyze` |
-| 🔁 | **Spot swaps on Ref Finance** with a live quote, slippage protection and an explorer link. | `/buy`, `/sell` |
+| 🔁 | **Spot swaps on Ref Finance** with a live quote, slippage protection and an explorer link. Swap **any token for another** in one transaction, routed through NEAR when there's no direct pool. | `/buy`, `/sell`, `/swap` |
 | 📈 | **Long/short with leverage** at live prices, with liquidation price and fees. Paper money for now. | `/long`, `/short`, `/close` |
 | 🛡 | **Hold-or-close verdict** for every trade, with reasons and a suggested stop-loss. | `/check`, `/positions` |
 | 🔔 | **5-minute monitor:** alerts when a verdict changes, and automatic liquidation of paper trades. | automatic |
@@ -180,7 +198,7 @@ The bot takes the last 2 days of real 5-minute price moves and replays them in r
 ## Engineering
 
 - **About 3,150 lines of strict TypeScript** across 25 small modules, with only 4 runtime dependencies (`grammy`, `near-api-js`, `@anthropic-ai/sdk`, `dotenv`). The database is Node's built-in SQLite.
-- **28 automated tests, about 830 lines:** leverage maths, indicators, encryption, the rule engine, the odds, news parsing, the NEAR AI adapter, and end-to-end bot flows with fake Telegram, market and NEAR network.
+- **29 automated tests, about 860 lines:** leverage maths, indicators, encryption, the rule engine, the odds, news parsing, the NEAR AI adapter, and end-to-end bot flows with fake Telegram, market and NEAR network.
 - **`npm run smoke`** checks the live services without keys or transactions: market data, 5-minute candles, live odds, the news feeds, the NEAR RPC and a Ref Finance quote.
 - **Provider-agnostic AI:** NEAR AI Cloud by default, plus Anthropic directly or any OpenAI-compatible API.
 - **Runs anywhere:** scripts for a free Google Cloud server and for a Windows PC (starts at login, restarts after crashes, daily database backups). See [DEPLOY.md](DEPLOY.md).
@@ -230,6 +248,7 @@ deploy/          Linux server and Windows PC scripts
 | `/analyze <symbol, contract or link>` | Deep analysis: market bias, safety score, risk flags, technicals, AI read |
 | `/buy <token> <NEAR>` | Quote, then Confirm. Swaps on Ref Finance |
 | `/sell <token> <amount or 50%>` | Quote, then Confirm. Sells the token for NEAR |
+| `/swap <amount or 50%> <from> <to>` | Token for token in one transaction, e.g. `/swap 250 REF USDC` (routed through NEAR if needed) |
 | `/long <token> <$collateral> <leverage>` | Open a long (e.g. `/long NEAR $100 3`) |
 | `/short <token> <$collateral> <leverage>` | Open a short |
 | `/positions` | Open trades with live profit and loss |
@@ -272,7 +291,7 @@ Without any key, the bot runs on rules only and every command still works.
 
 ## Status and roadmap
 
-**Working today on testnet:** wallets, research, Ref Finance swaps, paper long/short at live prices, the 5-minute monitor and alerts, trade reports with odds and news, history, and AI chat in any language on NEAR AI.
+**Working today on testnet:** wallets, research, Ref Finance swaps (including token-to-token routes), paper long/short at live prices, the 5-minute monitor and alerts, trade reports with odds and news, history, and AI chat in any language on NEAR AI.
 
 **Honest limits:**
 - Long/short uses **paper money**: no NEAR exchange offers perpetuals on testnet.
@@ -292,5 +311,7 @@ Without any key, the bot runs on rules only and every command still works.
 ## Author
 
 Built by **[@emmyloyal](https://github.com/emmyloyal)**.
+
+Also by the author: **[SwarmCompute](https://github.com/emmyloyal/swarmcompute)**, a GPU marketplace on NEAR where AI agents buy compute together through sealed-bid auctions and on-chain escrow ([live app](https://swarmcompute.vercel.app)).
 
 <sub>nearProphet reads market signals; it doesn't know the future. Nothing here is financial advice.</sub>

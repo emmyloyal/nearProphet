@@ -56,7 +56,12 @@ async function swapLine(t: TradeRow, now: number): Promise<{ html: string; data:
   const [inAmt, outAmt] = await Promise.all([amount(t.amount_in, t.token_in), amount(t.amount_out, t.token_out)]);
   const inSym = symbolOf(t.token_in);
   const outSym = symbolOf(t.token_out);
-  const text = t.action === 'buy' ? `Bought ${outAmt} ${outSym} for ${inAmt} ${inSym}` : `Sold ${inAmt} ${inSym} for ${outAmt} ${outSym}`;
+  const text =
+    t.action === 'buy'
+      ? `Bought ${outAmt} ${outSym} for ${inAmt} ${inSym}`
+      : t.action === 'swap'
+        ? `Swapped ${inAmt} ${inSym} for ${outAmt} ${outSym}`
+        : `Sold ${inAmt} ${inSym} for ${outAmt} ${outSym}`;
   const link = t.tx_hash ? ` · <a href="https://${config.network === 'testnet' ? 'testnet.' : ''}nearblocks.io/txns/${encodeURIComponent(t.tx_hash)}">tx</a>` : '';
   return { html: `• ${esc(text)} · ${ago(t.at, now)}${link}`, data: { action: t.action, summary: text, age: ago(t.at, now), tx: t.tx_hash } };
 }

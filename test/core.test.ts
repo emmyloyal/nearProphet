@@ -9,6 +9,7 @@ import { atr, type Candle, ema, macd, rsi, type Technicals, technicals } from '.
 import { generateWallet } from '../src/near.js';
 import { closePosition, openPerp } from '../src/paper.js';
 import { fee, isLiquidated, liqDistancePct, liquidationPrice, pnlUsd } from '../src/perps.js';
+import { swapMsg } from '../src/ref.js';
 import { resolveToken } from '../src/tokens.js';
 import { applySlippage, fromUnits, toUnits } from '../src/units.js';
 
@@ -210,4 +211,30 @@ test('token resolution: contract addresses, links and 0x addresses', () => {
   // Links without a token, and junk, stay unresolved
   assert.equal(resolveToken('https://nearblocks.io/'), null);
   assert.equal(resolveToken('https://evil.example/<script>'), null);
+});
+
+test('swap routes: one Ref message, later hops chain the previous output, slippage only at the end', () => {
+  const two = JSON.parse(
+    swapMsg({
+      poolId: 79,
+      tokenIn: 'ref.near',
+      tokenOut: 'usdc.near',
+      amountIn: 250n,
+      amountOut: 15n,
+      minOut: 14n,
+      hops: [
+        { poolId: 79, tokenIn: 'ref.near', tokenOut: 'wrap.near' },
+        { poolId: 4512, tokenIn: 'wrap.near', tokenOut: 'usdc.near' },
+      ],
+    }),
+  );
+  assert.deepEqual(two, {
+    force: 0,
+    actions: [
+      { pool_id: 79, token_in: 'ref.near', token_out: 'wrap.near', amount_in: '250', min_amount_out: '0' },
+      { pool_id: 4512, token_in: 'wrap.near', token_out: 'usdc.near', min_amount_out: '14' },
+    ],
+  });
+  const one = JSON.parse(swapMsg({ poolId: 2, tokenIn: 'a.near', tokenOut: 'b.near', amountIn: 5n, amountOut: 4n, minOut: 3n, hops: [{ poolId: 2, tokenIn: 'a.near', tokenOut: 'b.near' }] }));
+  assert.deepEqual(one.actions, [{ pool_id: 2, token_in: 'a.near', token_out: 'b.near', amount_in: '5', min_amount_out: '3' }]);
 });

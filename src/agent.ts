@@ -11,7 +11,7 @@ import { getMarket, getMarketAndCandles } from './market.js';
 import { marketNews, newsData, newsFor } from './news.js';
 import { ftBalance, ftMetadata, nearBalance } from './near.js';
 import { pnlUsd } from './perps.js';
-import { prepareBuy, prepareClose, prepareOpen, prepareSell, register } from './proposals.js';
+import { prepareBuy, prepareClose, prepareOpen, prepareSell, prepareSwap, register } from './proposals.js';
 import { knownSymbols, resolveToken } from './tokens.js';
 import { fromUnits } from './units.js';
 
@@ -41,7 +41,7 @@ LANGUAGE
 WHAT YOU CAN DO
 - Look up tokens, run deep analysis, read the user's wallet and open trades, and run the live hold-or-close check, using the tools.
 - Get recent crypto headlines with get_news (and search the web if that tool is available) when news could matter. Use only headlines you actually got; never invent news.
-- Propose buys, sells, opening a long or short, and closing a trade with the propose_* tools. A proposal only shows the user a Confirm button; nothing happens unless they tap it. Never claim a trade was done.
+- Propose buys, sells, token-to-token swaps, opening a long or short, and closing a trade with the propose_* tools. A proposal only shows the user a Confirm button; nothing happens unless they tap it. Never claim a trade was done.
 - Only propose a trade when the user asked for one or clearly agreed to your suggestion. Ask if the amount, token or leverage is missing; do not guess amounts.
 
 RULES
@@ -108,6 +108,19 @@ const TOOLS: Anthropic.ToolUnion[] = [
       type: 'object',
       properties: { token: { type: 'string' }, amount: { type: 'string', description: 'Token amount like "12.5", or a percent of holdings like "50%"' } },
       required: ['token', 'amount'],
+    },
+  },
+  {
+    name: 'propose_swap',
+    description: 'Prepare swapping one token for another (e.g. REF to USDC) in one transaction, directly or routed through NEAR. Shows the user a quote with a Confirm button.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        from_token: { type: 'string' },
+        to_token: { type: 'string' },
+        amount: { type: 'string', description: 'Amount of from_token like "12.5", or a percent of holdings like "50%"' },
+      },
+      required: ['from_token', 'to_token', 'amount'],
     },
   },
   {
@@ -313,6 +326,12 @@ export class Agent {
         return this.propose(tgId, proposals, await prepareBuy(this.db, tgId, await tok(), String(a.near_amount)));
       case 'propose_sell':
         return this.propose(tgId, proposals, await prepareSell(this.db, tgId, await tok(), String(a.amount)));
+      case 'propose_swap': {
+        const [f, t] = await Promise.all([findToken(String(a.from_token ?? '')), findToken(String(a.to_token ?? ''))]);
+        if (!f) throw new Error(`Token "${a.from_token}" not found. Ask the user for the contract id.`);
+        if (!t) throw new Error(`Token "${a.to_token}" not found. Ask the user for the contract id.`);
+        return this.propose(tgId, proposals, await prepareSwap(this.db, tgId, f, t, String(a.amount)));
+      }
       case 'propose_open_position':
         if (a.side !== 'long' && a.side !== 'short') throw new Error('side must be long or short');
         return this.propose(tgId, proposals, await prepareOpen(this.db, tgId, a.side, await tok(), Number(a.collateral_usd), Number(a.leverage)));

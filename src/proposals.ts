@@ -7,7 +7,7 @@ import { getMarket } from './market.js';
 import { ftBalance, ftMetadata, nearBalance, signerAccount, withUserLock } from './near.js';
 import { closePosition, openPerp } from './paper.js';
 import { fee, liquidationPrice, type Side } from './perps.js';
-import { buyWithNear, quote, type Quote, sellForNear } from './ref.js';
+import { buyWithNear, quoteRoute, type Quote, sellForNear, swapTokens } from './ref.js';
 import { noMarketReason, notTradableReason, TOKEN_NOT_FOUND } from './lookup.js';
 import type { TokenRef } from './tokens.js';
 import { fromUnits, toUnits } from './units.js';
@@ -21,6 +21,7 @@ import { fromUnits, toUnits } from './units.js';
 export type Proposal =
   | { kind: 'buy'; token: TokenRef; q: Quote; decimals: number; nearAmount: string; symbol: string }
   | { kind: 'sell'; token: TokenRef; q: Quote; decimals: number; sellAll: boolean; symbol: string }
+  | { kind: 'swap'; from: TokenRef; to: TokenRef; q: Quote; decIn: number; decOut: number; symIn: string; symOut: string; sellAll: boolean }
   | { kind: 'open'; side: Side; token: TokenRef; symbol: string; collateral: number; leverage: number }
   | { kind: 'close'; positionId: number };
 
@@ -67,7 +68,7 @@ export async function prepareBuy(db: Db, tgId: number, token: TokenRef | null, n
   if (amountIn <= 0n) throw new UserError('Amount must be more than zero.');
   if (amountIn > nearToYocto(String(config.maxTradeNear) as `${number}`)) throw new UserError(`Max per trade is ${config.maxTradeNear} NEAR.`);
   const meta = await ftMetadata(token.tradeId);
-  const q = await quote(config.wrapContract, token.tradeId, amountIn);
+  const q = await quoteRoute(config.wrapContract, token.tradeId, amountIn);
   return {
     p: { kind: 'buy', token, q, decimals: meta.decimals, nearAmount, symbol: meta.symbol },
     summary: `<b>Confirm buy</b>\nSpend: ${esc(nearAmount)} NEAR\nReceive: ~${fromUnits(q.amountOut, meta.decimals)} ${esc(meta.symbol)}\nMinimum (after ${config.slippagePct}% slippage): ${fromUnits(q.minOut, meta.decimals)}\nPool #${q.poolId} on Ref Finance (${config.network})`,
@@ -82,20 +83,68 @@ export async function prepareSell(db: Db, tgId: number, token: TokenRef | null, 
   if (token.tradeId === config.wrapContract) throw new UserError('That is NEAR itself; pick another token to sell.');
   const meta = await ftMetadata(token.tradeId);
   const bal = await ftBalance(token.tradeId, user.account_id);
+  const amountIn = amountFromInput(amount, bal, meta);
+  const q = await quoteRoute(token.tradeId, config.wrapContract, amountIn);
+  return {
+    p: { kind: 'sell', token, q, decimals: meta.decimals, sellAll: amountIn === bal, symbol: meta.symbol },
+    summary: `<b>Confirm sell</b>\nSell: ${fromUnits(amountIn, meta.decimals)} ${esc(meta.symbol)}\nReceive: ~${fromUnits(q.amountOut, 24)} NEAR\nMinimum (after ${config.slippagePct}% slippage): ${fromUnits(q.minOut, 24)} NEAR`,
+  };
+}
+
+/** "12.5" or "50%" of the balance, in the token's smallest units. */
+function amountFromInput(amount: string, bal: bigint, meta: { decimals: number; symbol: string }): bigint {
   let amountIn: bigint;
   const pm = /^(\d+(?:\.\d+)?)%$/.exec(amount.trim());
   if (pm) {
     const pct = Number(pm[1]);
     if (!(pct > 0 && pct <= 100)) throw new UserError('Percent must be between 0 and 100.');
     amountIn = (bal * BigInt(Math.round(pct * 100))) / 10_000n;
-  } else amountIn = toUnits(amount, meta.decimals);
-  if (amountIn <= 0n) throw new UserError('Nothing to sell.');
+  } else amountIn = toUnits(amount.replace(/,/g, ''), meta.decimals);
+  if (amountIn <= 0n) throw new UserError(bal > 0n ? 'Amount must be more than zero.' : `You hold no ${meta.symbol}.`);
   if (amountIn > bal) throw new UserError(`You only hold ${fromUnits(bal, meta.decimals)} ${meta.symbol}.`);
-  const q = await quote(token.tradeId, config.wrapContract, amountIn);
-  return {
-    p: { kind: 'sell', token, q, decimals: meta.decimals, sellAll: amountIn === bal, symbol: meta.symbol },
-    summary: `<b>Confirm sell</b>\nSell: ${fromUnits(amountIn, meta.decimals)} ${esc(meta.symbol)}\nReceive: ~${fromUnits(q.amountOut, 24)} NEAR\nMinimum (after ${config.slippagePct}% slippage): ${fromUnits(q.minOut, 24)} NEAR`,
-  };
+  return amountIn;
+}
+
+/**
+ * Token -> token in one transaction: a direct pool or two pools through NEAR, whichever pays more.
+ * Swaps from or to NEAR itself are handed to /buy and /sell (which wrap and unwrap NEAR).
+ */
+export async function prepareSwap(db: Db, tgId: number, from: TokenRef | null, to: TokenRef | null, amount: string): Promise<{ p: Proposal; summary: string }> {
+  const user = db.user(tgId);
+  if (!user.account_id) throw new UserError('Create a wallet first with /wallet.');
+  if (!from || !to) throw new UserError(TOKEN_NOT_FOUND);
+  if (!from.tradeId) throw new UserError(notTradableReason(from)!);
+  if (!to.tradeId) throw new UserError(notTradableReason(to)!);
+  if (from.tradeId === to.tradeId) throw new UserError('Pick two different tokens.');
+  if (from.tradeId === config.wrapContract) return prepareBuy(db, tgId, to, amount);
+  if (to.tradeId === config.wrapContract) return prepareSell(db, tgId, from, amount);
+  const [metaIn, metaOut, bal] = await Promise.all([ftMetadata(from.tradeId), ftMetadata(to.tradeId), ftBalance(from.tradeId, user.account_id)]);
+  const amountIn = amountFromInput(amount, bal, metaIn);
+  await checkTradeSize(from, Number(fromUnits(amountIn, metaIn.decimals, 8)));
+  const q = await quoteRoute(from.tradeId, to.tradeId, amountIn).catch((e) => {
+    throw new UserError((e as Error).message);
+  });
+  return { p: { kind: 'swap', from, to, q, decIn: metaIn.decimals, decOut: metaOut.decimals, symIn: metaIn.symbol, symOut: metaOut.symbol, sellAll: amountIn === bal }, summary: swapSummary(q, metaIn, metaOut) };
+}
+
+export function swapSummary(q: Quote, metaIn: { decimals: number; symbol: string }, metaOut: { decimals: number; symbol: string }): string {
+  const names = new Map([[q.tokenIn, metaIn.symbol], [q.tokenOut, metaOut.symbol], [config.wrapContract, 'NEAR']]);
+  const route = [q.hops[0]!.tokenIn, ...q.hops.map((h) => h.tokenOut)].map((t) => names.get(t) ?? t).join(' → ');
+  const pools = q.hops.map((h) => `#${h.poolId}`).join(', ');
+  return (
+    `<b>Confirm swap</b>\nSwap: ${fromUnits(q.amountIn, metaIn.decimals)} ${esc(metaIn.symbol)}\nReceive: ~${fromUnits(q.amountOut, metaOut.decimals)} ${esc(metaOut.symbol)}\n` +
+    `Minimum (after ${config.slippagePct}% slippage): ${fromUnits(q.minOut, metaOut.decimals)} ${esc(metaOut.symbol)}\n` +
+    `Route: ${esc(route)} (pool${q.hops.length > 1 ? 's' : ''} ${pools}), one transaction on Ref Finance (${config.network})`
+  );
+}
+
+/** Keep token swaps under the same per-trade cap as NEAR trades, when a market price is known. */
+async function checkTradeSize(t: TokenRef, amount: number): Promise<void> {
+  if (!t.marketId) return;
+  const [tok, near] = await Promise.all([getMarket(t.marketId), getMarket('wrap.near')]).catch(() => [null, null]);
+  if (!tok || !near || !(near.priceUsd > 0)) return;
+  const inNear = (amount * tok.priceUsd) / near.priceUsd;
+  if (inNear > config.maxTradeNear) throw new UserError(`Max per trade is ${config.maxTradeNear} NEAR (this is about ${inNear.toFixed(1)} NEAR).`);
 }
 
 export async function prepareOpen(
@@ -140,6 +189,7 @@ export async function execute(db: Db, tgId: number, p: Proposal): Promise<string
   switch (p.kind) {
     case 'buy':
     case 'sell':
+    case 'swap':
       return executeSwap(db, tgId, p);
     case 'open': {
       const m = await getMarket(p.token.marketId!);
@@ -170,7 +220,7 @@ export async function execute(db: Db, tgId: number, p: Proposal): Promise<string
   }
 }
 
-async function executeSwap(db: Db, tgId: number, p: Extract<Proposal, { kind: 'buy' | 'sell' }>): Promise<string> {
+async function executeSwap(db: Db, tgId: number, p: Extract<Proposal, { kind: 'buy' | 'sell' | 'swap' }>): Promise<string> {
   const res = await withUserLock(tgId, async () => {
     const user = db.user(tgId);
     const account = signerAccount(user);
@@ -179,6 +229,7 @@ async function executeSwap(db: Db, tgId: number, p: Extract<Proposal, { kind: 'b
       if (avail === null) throw new UserError('Your wallet is not active yet. Fund it first (/wallet).');
       return buyWithNear(account, p.q, avail);
     }
+    if (p.kind === 'swap') return swapTokens(account, p.q);
     return sellForNear(account, p.q);
   });
   const explorer = res.txHash ? `\nhttps://${config.network === 'testnet' ? 'testnet.' : ''}nearblocks.io/txns/${res.txHash}` : '';
@@ -191,6 +242,21 @@ async function executeSwap(db: Db, tgId: number, p: Extract<Proposal, { kind: 'b
     amount_out: res.received.toString(),
     tx_hash: res.txHash,
   });
+  if (p.kind === 'swap') {
+    await closeTracked(db, tgId, p.sellAll ? p.from.marketId : null);
+    let tracked = '';
+    if (p.to.marketId) {
+      try {
+        const tok = await getMarket(p.to.marketId);
+        const usd = Number(fromUnits(res.received, p.decOut, 8)) * tok.priceUsd;
+        const pid = db.openPosition({ tg_id: tgId, kind: 'spot', side: 'long', symbol: p.symOut, market_id: p.to.marketId, entry: tok.priceUsd, size_usd: usd, collateral: usd, leverage: 1, liq: null });
+        tracked = `\nTracking ${p.symOut} as position #${pid}. /check ${pid} for a hold-or-sell read.`;
+      } catch {
+        /* tracking is best-effort */
+      }
+    }
+    return `✅ Swapped ${fromUnits(p.q.amountIn, p.decIn)} ${p.symIn} for ${fromUnits(res.received, p.decOut)} ${p.symOut}.${tracked}${explorer}`;
+  }
   if (p.kind === 'buy') {
     let tracked = '';
     if (p.token.marketId) {
@@ -205,9 +271,13 @@ async function executeSwap(db: Db, tgId: number, p: Extract<Proposal, { kind: 'b
     }
     return `✅ Bought ${fromUnits(res.received, p.decimals)} ${p.symbol} for ${p.nearAmount} NEAR.${tracked}${explorer}`;
   }
-  if (p.sellAll && p.token.marketId) {
-    const px = await getMarket(p.token.marketId).then((m) => m.priceUsd).catch(() => null);
-    if (px !== null) for (const pos of db.openPositions(tgId)) if (pos.kind === 'spot' && pos.market_id === p.token.marketId) closePosition(db, pos, px);
-  }
+  await closeTracked(db, tgId, p.sellAll ? p.token.marketId : null);
   return `✅ Sold for ${fromUnits(res.received, 24)} NEAR.${explorer}`;
+}
+
+/** After selling all of a token, stop tracking it as a spot position. */
+async function closeTracked(db: Db, tgId: number, marketId: string | null): Promise<void> {
+  if (!marketId) return;
+  const px = await getMarket(marketId).then((m) => m.priceUsd).catch(() => null);
+  if (px !== null) for (const pos of db.openPositions(tgId)) if (pos.kind === 'spot' && pos.market_id === marketId) closePosition(db, pos, px);
 }
