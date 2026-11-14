@@ -249,7 +249,7 @@ export function createBot(db: Db, agent: Agent | null = null): Bot {
         symbol: market.symbol.toUpperCase(),
         marketId: token.marketId,
         price: market.priceUsd,
-        collateral: Number(coll),
+        collateral: Number(coll.replace(/[$,]/g, '')),
         leverage: lev ? Number(lev.replace(/x$/i, '')) : 1,
         maxLeverage: config.maxLeverage,
       });

@@ -154,6 +154,10 @@ test('bot: long -> check -> monitor alert -> close; liquidation', async () => {
   assert.match(cl, /PnL: <b>\+\$40\.00<\/b>/);
   assert.match(await say('/close 2'), /Usage/);
   assert.match(await say('/positions'), /No open trades/);
+
+  // Collateral typed with $ and commas, as the usage hint shows it
+  assert.match(await say('/long NEAR $1,000 2x', 78), /Opened #3 WNEAR LONG 2x[\s\S]*\$1000\.00 collateral/);
+  assert.match(await say('/close 3', 78), /#3/);
 });
 
 test('bot: free text without an AI key points to /help; unknown commands handled', async () => {
