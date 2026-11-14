@@ -58,6 +58,18 @@ nearProphet puts the whole loop into one Telegram chat: **research → trade →
   </tr>
   <tr>
     <td width="50%" valign="top">
+      <b>Chat in French</b><br>
+      <sub>Same live position, same rules, answered in French. The trader asks to close and gets a Confirm button.</sub><br><br>
+      <img src="docs/images/chat-french.svg" alt="AI chat in French with a Confirm button" width="100%">
+    </td>
+    <td width="50%" valign="top">
+      <b>Chat in Spanish</b><br>
+      <sub>A short this time: the rules say HOLD, the AI suggests where to move the stop, and the close still waits for Confirm.</sub><br><br>
+      <img src="docs/images/chat-spanish.svg" alt="AI chat in Spanish with a Confirm button" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
       <b>Deep token analysis</b><br>
       <sub>Price, liquidity, volume, buy/sell pressure, a 0–100 safety score, risk flags and technicals.</sub><br><br>
       <img src="docs/images/analyze.svg" alt="/analyze NEAR output" width="100%">

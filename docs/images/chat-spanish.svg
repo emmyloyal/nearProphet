@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="460" height="1164.5" viewBox="0 0 460 1164.5" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<rect width="460" height="1164.5" rx="18" fill="#0e1621"/>
+<path d="M0 18 a18 18 0 0 1 18 -18 h424 a18 18 0 0 1 18 18 v46 h-460 z" fill="#17212b"/>
+<text x="22" y="40" fill="#7f91a4" font-size="22">‹</text>
+<circle cx="64" cy="32" r="19" fill="#3a8ee6"/><text x="64" y="38" fill="#fff" font-size="16" font-weight="700" text-anchor="middle">NP</text>
+<text x="92" y="28" fill="#f5f5f5" font-size="15" font-weight="700">nearProphet</text>
+<text x="92" y="46" fill="#7f91a4" font-size="12">bot · AI chat in Spanish</text>
+<rect x="180" y="74" width="100" height="22" rx="11" fill="#1e2c3a"/><text x="230" y="89" fill="#7f91a4" font-size="12" text-anchor="middle">Today</text>
+<rect x="90" y="108" width="360" height="47.5" rx="14" fill="#2b5278"/>
+<text x="102" y="134" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">¿Cómo va mi short de NEAR? ¿Debería cerrarlo ya?</tspan></text>
+<text x="440" y="147.5" fill="#7da8d3" font-size="11" text-anchor="end">12:04 ✓✓</text>
+<rect x="10" y="167.5" width="360" height="515.5" rx="14" fill="#182533"/>
+<text x="22" y="193.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Tu short de NEAR va bien y la verificación </tspan></text>
+<text x="22" y="213" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">automática dice HOLD (mantener), sin urgencia.</tspan></text>
+<text x="22" y="232.5" font-size="14" xml:space="preserve"></text>
+<text x="22" y="252" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Entrada: 3.4402, precio actual: 3.34</tspan></text>
+<text x="22" y="271.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• PnL: +8.74 USD (+8.74%) con apalancamiento 3x y </tspan></text>
+<text x="22" y="291" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">100 USD de colateral</tspan></text>
+<text x="22" y="310.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Liquidación: 4.56973, a unos 36.8% de distancia, </tspan></text>
+<text x="22" y="330" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">así que el riesgo es bajo</tspan></text>
+<text x="22" y="349.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Tendencia: las 3 señales apoyan el short. El </tspan></text>
+<text x="22" y="369" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">precio está por debajo de las EMA20 (3.385) y </tspan></text>
+<text x="22" y="388.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">EMA50 (3.440), y el MACD es negativo.</tspan></text>
+<text x="22" y="408" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Aviso: el momentum se está debilitando. El RSI </tspan></text>
+<text x="22" y="427.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">es 41 y el histograma del MACD se acerca a cero. </tspan></text>
+<text x="22" y="447" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">En 24h el precio cae 5.38%, pero en la última hora </tspan></text>
+<text x="22" y="466.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">sube 0.3%.</tspan></text>
+<text x="22" y="486" font-size="14" xml:space="preserve"></text>
+<text x="22" y="505.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Mi opinión: no hace falta cerrar ya. Si no quieres </tspan></text>
+<text x="22" y="525" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">que se te escape la ganancia, ajusta el stop cerca </tspan></text>
+<text x="22" y="544.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">de 3.424. Eso protege tu beneficio y deja correr el </tspan></text>
+<text x="22" y="564" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">short si la caída sigue. Si prefieres asegurar el </tspan></text>
+<text x="22" y="583.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">+8.7% ahora, también es razonable. Es cuestión de </tspan></text>
+<text x="22" y="603" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">tu tolerancia al riesgo.</tspan></text>
+<text x="22" y="622.5" font-size="14" xml:space="preserve"></text>
+<text x="22" y="642" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">No es asesoramiento financiero. ¿Quieres que </tspan></text>
+<text x="22" y="661.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">prepare el cierre?</tspan></text>
+<text x="360" y="675" fill="#6d7f8f" font-size="11" text-anchor="end">12:04</text>
+<rect x="322.3" y="695" width="127.69999999999999" height="47.5" rx="14" fill="#2b5278"/>
+<text x="334.3" y="721" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Sí, ciérralo</tspan></text>
+<text x="440" y="734.5" fill="#7da8d3" font-size="11" text-anchor="end">12:05 ✓✓</text>
+<rect x="10" y="754.5" width="360" height="223" rx="14" fill="#182533"/>
+<text x="22" y="780.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Ya preparé el cierre de tu short de NEAR (#1, 3x). </tspan></text>
+<text x="22" y="800" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Toca el botón Confirm para ejecutarlo. Hasta que </tspan></text>
+<text x="22" y="819.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">lo toques no se cierra nada.</tspan></text>
+<text x="22" y="839" font-size="14" xml:space="preserve"></text>
+<text x="22" y="858.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Entrada: 3.4402</tspan></text>
+<text x="22" y="878" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Precio actual: 3.34</tspan></text>
+<text x="22" y="897.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• PnL actual: +8.74 USD (+8.74%)</tspan></text>
+<text x="22" y="917" font-size="14" xml:space="preserve"></text>
+<text x="22" y="936.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">El PnL final puede variar un poco si el precio se </tspan></text>
+<text x="22" y="956" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">mueve antes de que confirmes.</tspan></text>
+<text x="360" y="969.5" fill="#6d7f8f" font-size="11" text-anchor="end">12:05</text>
+<rect x="10" y="989.5" width="303.49999999999994" height="67" rx="14" fill="#182533"/>
+<text x="22" y="1015.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5" font-weight="700">Confirm close #1 WNEAR SHORT 3x</tspan></text>
+<text x="22" y="1035" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Entry $3.4402 → now $3.3400</tspan></text>
+<text x="303.49999999999994" y="1048.5" fill="#6d7f8f" font-size="11" text-anchor="end">12:05</text>
+<rect x="10" y="1060.5" width="149.74999999999997" height="36" rx="10" fill="#22364b"/><text x="84.87499999999999" y="1083.5" fill="#f5f5f5" font-size="14" font-weight="600" text-anchor="middle">✅ Confirm</text>
+<rect x="163.74999999999997" y="1060.5" width="149.74999999999997" height="36" rx="10" fill="#22364b"/><text x="238.62499999999994" y="1083.5" fill="#f5f5f5" font-size="14" font-weight="600" text-anchor="middle">Cancel</text>
+<rect x="10" y="1118.5" width="440" height="36" rx="18" fill="#17212b"/>
+<text x="28" y="1141.5" fill="#7f91a4" font-size="14">Message</text>
+</svg>
