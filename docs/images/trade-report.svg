@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="460" height="1570" viewBox="0 0 460 1570" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<rect width="460" height="1570" rx="18" fill="#0e1621"/>
+<path d="M0 18 a18 18 0 0 1 18 -18 h424 a18 18 0 0 1 18 18 v46 h-460 z" fill="#17212b"/>
+<text x="22" y="40" fill="#7f91a4" font-size="22">‹</text>
+<circle cx="64" cy="32" r="19" fill="#3a8ee6"/><text x="64" y="38" fill="#fff" font-size="16" font-weight="700" text-anchor="middle">NP</text>
+<text x="92" y="28" fill="#f5f5f5" font-size="15" font-weight="700">nearProphet</text>
+<text x="92" y="46" fill="#7f91a4" font-size="12">bot · scheduled trade report</text>
+<rect x="180" y="74" width="100" height="22" rx="11" fill="#1e2c3a"/><text x="230" y="89" fill="#7f91a4" font-size="12" text-anchor="middle">Today</text>
+<rect x="10" y="108" width="360" height="652" rx="14" fill="#182533"/>
+<text x="22" y="134" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">📊 </tspan><tspan fill="#f5f5f5" font-weight="700">Trade report</tspan></text>
+<text x="22" y="153.5" font-size="14" xml:space="preserve"></text>
+<text x="22" y="173" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5" font-weight="700">#1 WNEAR LONG 3x</tspan><tspan fill="#f5f5f5"> (paper)</tspan></text>
+<text x="22" y="192.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Entry $3.2398 → now </tspan><tspan fill="#f5f5f5" font-weight="700">$3.3400</tspan><tspan fill="#f5f5f5"> | PnL </tspan><tspan fill="#f5f5f5" font-weight="700">+$9.28</tspan><tspan fill="#f5f5f5"> </tspan></text>
+<text x="22" y="212" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">(+9.3%)</tspan></text>
+<text x="22" y="231.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Verdict: </tspan><tspan fill="#f5f5f5" font-weight="700">🔴 CLOSE</tspan></text>
+<text x="22" y="251" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• You are in profit and the trend has flipped </tspan></text>
+<text x="22" y="270.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">against the position. Lock it in.</tspan></text>
+<text x="22" y="290" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Trend: hourly down (against you), 5-min sideways </tspan></text>
+<text x="22" y="309.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">(mixed)</tspan></text>
+<text x="22" y="329" font-size="14" xml:space="preserve"></text>
+<text x="22" y="348.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5" font-weight="700">Next 24h, estimated</tspan><tspan fill="#f5f5f5"> (from recent 5-min </tspan></text>
+<text x="22" y="368" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">volatility)</tspan></text>
+<text x="22" y="387.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Touches suggested stop $3.2556: 63%</tspan></text>
+<text x="22" y="407" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Touches target $3.4244: 63%</tspan></text>
+<text x="22" y="426.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Touches liquidation $2.1761: &lt;1%</tspan></text>
+<text x="22" y="446" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• In profit at the end: 69%</tspan></text>
+<text x="22" y="465.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Likely range: $3.0932 – $3.6050</tspan></text>
+<text x="22" y="485" font-size="14" xml:space="preserve"></text>
+<text x="22" y="504.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">———</tspan></text>
+<text x="22" y="524" font-size="14" xml:space="preserve"></text>
+<text x="22" y="543.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5" font-weight="700">Crypto market news</tspan></text>
+<text x="22" y="563" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• </tspan><tspan fill="#6ab3f3" text-decoration="underline">Here’s what happened in crypto today</tspan><tspan fill="#f5f5f5"> </tspan></text>
+<text x="22" y="582.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">(cointelegraph.com, 1h ago)</tspan></text>
+<text x="22" y="602" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• </tspan><tspan fill="#6ab3f3" text-decoration="underline">Microsoft confirms global outage resolved, rules </tspan></text>
+<text x="22" y="621.5" font-size="14" xml:space="preserve"><tspan fill="#6ab3f3" text-decoration="underline">out cyberattack</tspan><tspan fill="#f5f5f5"> (cointelegraph.com, 2h ago)</tspan></text>
+<text x="22" y="641" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• </tspan><tspan fill="#6ab3f3" text-decoration="underline">MegaETH parent cuts 20% of staff amid </tspan></text>
+<text x="22" y="660.5" font-size="14" xml:space="preserve"><tspan fill="#6ab3f3" text-decoration="underline">restructuring, AI push</tspan><tspan fill="#f5f5f5"> (cointelegraph.com, 4h ago)</tspan></text>
+<text x="22" y="680" font-size="14" xml:space="preserve"></text>
+<text x="22" y="699.5" font-size="14" xml:space="preserve"><tspan fill="#7f91a4" font-style="italic">Automated read of market signals, not financial </tspan></text>
+<text x="22" y="719" font-size="14" xml:space="preserve"><tspan fill="#7f91a4" font-style="italic">advice.</tspan><tspan fill="#f5f5f5"> Odds are estimates from recent price </tspan></text>
+<text x="22" y="738.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">swings and cannot foresee news or crashes.</tspan></text>
+<text x="360" y="752" fill="#6d7f8f" font-size="11" text-anchor="end">12:00</text>
+<rect x="10" y="772" width="360" height="730" rx="14" fill="#182533"/>
+<text x="22" y="798" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">🤖 Rule verdict: CLOSE (not urgent). The rules say </tspan></text>
+<text x="22" y="817.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">you are in profit and the trend has flipped against </tspan></text>
+<text x="22" y="837" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">you, so lock it in.</tspan></text>
+<text x="22" y="856.5" font-size="14" xml:space="preserve"></text>
+<text x="22" y="876" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">WNEAR long 3x: price 3.34, PnL +$9.28 (+9.3%). </tspan></text>
+<text x="22" y="895.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Liquidation is 2.176, which is 34.8% away.</tspan></text>
+<text x="22" y="915" font-size="14" xml:space="preserve"></text>
+<text x="22" y="934.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Trend and odds</tspan></text>
+<text x="22" y="954" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Hourly is bearish. Price is below the EMA20 </tspan></text>
+<text x="22" y="973.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">(3.385) and EMA50 (3.440), RSI is 41, and 24h is </tspan></text>
+<text x="22" y="993" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">-5.65%.</tspan></text>
+<text x="22" y="1012.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• 5-minute is a mild bounce (RSI 59).</tspan></text>
+<text x="22" y="1032" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Next 24h, as an estimate from volatility: 63% </tspan></text>
+<text x="22" y="1051.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">chance of touching the 3.2556 stop, 63.3% of </tspan></text>
+<text x="22" y="1071" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">touching the 3.4244 target, and 0% of touching </tspan></text>
+<text x="22" y="1090.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">liquidation. 68.7% chance of ending in profit, with a </tspan></text>
+<text x="22" y="1110" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">likely range of 3.09 to 3.61.</tspan></text>
+<text x="22" y="1129.5" font-size="14" xml:space="preserve"></text>
+<text x="22" y="1149" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">News</tspan></text>
+<text x="22" y="1168.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">No WNEAR headlines. The only relevant one is </tspan></text>
+<text x="22" y="1188" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Bitcoin ETFs shedding $2.35B in 2 weeks, which </tspan></text>
+<text x="22" y="1207.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">points to a cautious market. The others don't </tspan></text>
+<text x="22" y="1227" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">matter here.</tspan></text>
+<text x="22" y="1246.5" font-size="14" xml:space="preserve"></text>
+<text x="22" y="1266" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Options</tspan></text>
+<text x="22" y="1285.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Close now near 3.34: keeps about +$9.3, but you </tspan></text>
+<text x="22" y="1305" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">give up any bounce.</tspan></text>
+<text x="22" y="1324.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Hold with a stop at 3.2556: that is just above </tspan></text>
+<text x="22" y="1344" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">your entry, so a stop-out would leave roughly </tspan></text>
+<text x="22" y="1363.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">+$1.5. It keeps upside, but a stop-out gives back </tspan></text>
+<text x="22" y="1383" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">most of the profit.</tspan></text>
+<text x="22" y="1402.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">• Take partial profit near 3.4244: banks gains if </tspan></text>
+<text x="22" y="1422" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">the bounce comes, but price may never get there </tspan></text>
+<text x="22" y="1441.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">while the hourly trend stays weak.</tspan></text>
+<text x="22" y="1461" font-size="14" xml:space="preserve"></text>
+<text x="22" y="1480.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Not financial advice.</tspan></text>
+<text x="360" y="1494" fill="#6d7f8f" font-size="11" text-anchor="end">12:00</text>
+<rect x="10" y="1524" width="440" height="36" rx="18" fill="#17212b"/>
+<text x="28" y="1547" fill="#7f91a4" font-size="14">Message</text>
+</svg>

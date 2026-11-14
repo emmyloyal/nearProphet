@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="460" height="712" viewBox="0 0 460 712" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<rect width="460" height="712" rx="18" fill="#0e1621"/>
+<path d="M0 18 a18 18 0 0 1 18 -18 h424 a18 18 0 0 1 18 18 v46 h-460 z" fill="#17212b"/>
+<text x="22" y="40" fill="#7f91a4" font-size="22">‹</text>
+<circle cx="64" cy="32" r="19" fill="#3a8ee6"/><text x="64" y="38" fill="#fff" font-size="16" font-weight="700" text-anchor="middle">NP</text>
+<text x="92" y="28" fill="#f5f5f5" font-size="15" font-weight="700">nearProphet</text>
+<text x="92" y="46" fill="#7f91a4" font-size="12">bot · trade history</text>
+<rect x="180" y="74" width="100" height="22" rx="11" fill="#1e2c3a"/><text x="230" y="89" fill="#7f91a4" font-size="12" text-anchor="middle">Today</text>
+<rect x="338" y="108" width="112" height="47.5" rx="14" fill="#2b5278"/>
+<text x="350" y="134" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">/history</tspan></text>
+<text x="440" y="147.5" fill="#7da8d3" font-size="11" text-anchor="end">12:10 ✓✓</text>
+<rect x="10" y="167.5" width="360" height="476.5" rx="14" fill="#182533"/>
+<text x="22" y="193.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">📜 </tspan><tspan fill="#f5f5f5" font-weight="700">Trade history</tspan></text>
+<text x="22" y="213" font-size="14" xml:space="preserve"></text>
+<text x="22" y="232.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5" font-weight="700">Long/short (paper)</tspan><tspan fill="#f5f5f5">: 4 closed | 2 won, 2 lost (50% </tspan></text>
+<text x="22" y="252" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">wins)</tspan></text>
+<text x="22" y="271.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Total PnL: </tspan><tspan fill="#f5f5f5" font-weight="700">-$24.38</tspan><tspan fill="#f5f5f5"> (-4.6% of money put in)</tspan></text>
+<text x="22" y="291" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Best +$46.45 | Worst -$74.07</tspan></text>
+<text x="22" y="310.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">Paper balance now: $9873.27</tspan></text>
+<text x="22" y="330" font-size="14" xml:space="preserve"></text>
+<text x="22" y="349.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5" font-weight="700">Last 4 closed</tspan></text>
+<text x="22" y="369" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">🟢 #1 WNEAR LONG 3x: $3.1000 → $3.3400  </tspan></text>
+<text x="22" y="388.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5" font-weight="700">+$46.45</tspan><tspan fill="#f5f5f5"> +23.2%</tspan></text>
+<text x="22" y="408" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">held 24h, closed 6h ago</tspan></text>
+<text x="22" y="427.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">🟢 #2 REF SHORT 2x: $0.06520 → $0.06110  </tspan></text>
+<text x="22" y="447" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5" font-weight="700">+$18.87</tspan><tspan fill="#f5f5f5"> +12.6%</tspan></text>
+<text x="22" y="466.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">held 11h, closed 9h ago</tspan></text>
+<text x="22" y="486" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">🔴 #3 WNEAR LONG 5x: $3.5200 → $3.4100  </tspan></text>
+<text x="22" y="505.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5" font-weight="700">-$15.63</tspan><tspan fill="#f5f5f5"> -15.6%</tspan></text>
+<text x="22" y="525" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">held 11h, closed 41h ago</tspan></text>
+<text x="22" y="544.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">🔴 #4 AURORA LONG 10x: $0.08100 → $0.07350  </tspan></text>
+<text x="22" y="564" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5" font-weight="700">-$74.07</tspan><tspan fill="#f5f5f5"> -92.6%</tspan></text>
+<text x="22" y="583.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">held 9.0h, closed 3d ago</tspan></text>
+<text x="22" y="603" font-size="14" xml:space="preserve"></text>
+<text x="22" y="622.5" font-size="14" xml:space="preserve"><tspan fill="#f5f5f5">1 trade still open: /positions</tspan></text>
+<text x="360" y="636" fill="#6d7f8f" font-size="11" text-anchor="end">12:10</text>
+<rect x="10" y="666" width="440" height="36" rx="18" fill="#17212b"/>
+<text x="28" y="689" fill="#7f91a4" font-size="14">Message</text>
+</svg>

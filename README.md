@@ -1,148 +1,282 @@
-# NEAR Trading Bot (Telegram)
+<p align="center">
+  <img src="docs/images/banner.svg" alt="nearProphet: an AI trading co-pilot for NEAR, inside Telegram" width="100%">
+</p>
 
-A Telegram bot for NEAR Protocol. It can:
-- create a wallet for each user
-- look up and analyze tokens
-- buy and sell tokens on Ref Finance
-- open long and short trades (paper money for now)
-- watch open trades and tell you whether to hold or close
-- send scheduled trade reports: trend, estimated odds for the next 24 hours, and news
+<p align="center">
+  <a href="https://t.me/NearProphetbot"><img src="https://img.shields.io/badge/Telegram-@NearProphetbot-26A5E4?logo=telegram&logoColor=white" alt="Telegram"></a>
+  <img src="https://img.shields.io/badge/NEAR-testnet-00EC97" alt="NEAR testnet">
+  <img src="https://img.shields.io/badge/AI-NEAR%20AI%20Cloud-3a8ee6" alt="NEAR AI Cloud">
+  <img src="https://img.shields.io/badge/tests-27%20passing-2ea44f" alt="27 tests passing">
+  <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" alt="TypeScript strict">
+</p>
 
-It also has an **AI agent (Claude)** that takes part in every step. It chats in any language and replies in that language. It explains analyses and trades, searches the web for token news, and can propose any trade. It never moves money itself: every trade it proposes shows a Confirm button that only the user can press.
+**nearProphet** is a Telegram bot for trading NEAR Protocol tokens. It works like a co-pilot: it reads the market, checks your open trades every 5 minutes, warns you before liquidation, and explains every decision in the language you write in, including Nigerian Pidgin. It never moves your money on its own: every trade needs your tap on **Confirm**.
 
-**Status:** this version runs on testnet. Long/short trades use paper money against live prices.
+**Try it:** open [@NearProphetbot](https://t.me/NearProphetbot) in Telegram and send `/start`.
 
-## Commands
+---
+
+## The problem
+
+Trading on-chain is hard for everyday people, and it's hardest for the ones crypto says it wants to reach.
+
+1. **Markets move while you sleep.** A leveraged trade can be liquidated at 3 a.m. Most traders find out afterwards, because no one is watching the position for them.
+2. **One decision takes five apps.** A price chart, a DEX, a news site, a wallet and a calculator for liquidation prices. Beginners give up or guess.
+3. **Crypto tools speak English.** Millions of new traders think and chat in Pidgin, Yoruba, Hausa, Swahili, Spanish or Arabic. Their tools don't.
+4. **"AI trading bots" are either unsafe or useless.** Some trade your money on their own as a black box. Others are chatbots that make up prices because they have no live data.
+
+## The solution
+
+nearProphet puts the whole loop into one Telegram chat: **research → trade → monitor → decide**. The data comes from live sources and the decisions follow fixed rules; the AI only explains them. You stay in control.
+
+| Problem | How nearProphet solves it |
+|---|---|
+| Markets move while you sleep | A background monitor re-checks every open trade every 5 minutes against live candles. It messages you when its verdict changes (**HOLD / TAKE PROFIT / REDUCE / CLOSE**) and warns early when liquidation is close. |
+| Five apps per decision | Analysis, spot swaps on Ref Finance, long/short, open positions, news and history are all commands in one chat. A wallet is created for you with one command, with no sign-up. |
+| Tools only speak English | Write in any language and the AI answers in that language. It remembers your language for alerts and reports. |
+| Black-box AI | Fixed rules make the call and the AI explains it. The AI can **propose** a trade but can't execute one: you get a Confirm button. It never sees private keys. |
+| Gut-feeling decisions | Scheduled **trade reports** show the trend, **estimated odds for the next 24 hours** (stop-loss, target, liquidation) and relevant news, then two or three options with price levels. You decide. |
+
+---
+
+## See it in action
+
+> The images below are rendered from the bot's **real replies on live mainnet market data** (14 Nov 2026) in Telegram's dark theme. The history image uses sample trades run through the bot's real code.
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <b>Chat in any language</b> (here, Nigerian Pidgin)<br>
+      <sub>The AI reads your live position, explains the rule verdict in Pidgin, and prepares the close. Nothing happens until you tap Confirm.</sub><br><br>
+      <img src="docs/images/chat-pidgin.svg" alt="AI chat in Nigerian Pidgin with a Confirm button" width="100%">
+    </td>
+    <td width="50%" valign="top">
+      <b>Scheduled trade report</b><br>
+      <sub>Verdict, hourly and 5-minute trend, 24h odds, market news, then the AI's options with price levels.</sub><br><br>
+      <img src="docs/images/trade-report.svg" alt="Trade report with odds, news and AI options" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <b>Deep token analysis</b><br>
+      <sub>Price, liquidity, volume, buy/sell pressure, a 0–100 safety score, risk flags and technicals.</sub><br><br>
+      <img src="docs/images/analyze.svg" alt="/analyze NEAR output" width="100%">
+    </td>
+    <td width="50%" valign="top">
+      <b>Trade history</b><br>
+      <sub>Wins and losses, total profit and loss, best and worst trade, and every closed trade.</sub><br><br>
+      <img src="docs/images/history.svg" alt="/history output" width="100%">
+    </td>
+  </tr>
+</table>
+
+---
+
+## Features
+
+| | Feature | Command |
+|---|---|---|
+| 👛 | **Instant wallet.** A NEAR implicit account is created for each user and its key is encrypted with AES-256-GCM. | `/wallet`, `/export` |
+| 👀 | **Watch your own wallet** read-only. The bot never asks for its key. | `/connect` |
+| 🔎 | **Token research:** price, liquidity, volume, buys/sells, market bias, a 0–100 safety score and risk flags. | `/token`, `/analyze` |
+| 🔁 | **Spot swaps on Ref Finance** with a live quote, slippage protection and an explorer link. | `/buy`, `/sell` |
+| 📈 | **Long/short with leverage** at live prices, with liquidation price and fees. Paper money for now. | `/long`, `/short`, `/close` |
+| 🛡 | **Hold-or-close verdict** for every trade, with reasons and a suggested stop-loss. | `/check`, `/positions` |
+| 🔔 | **5-minute monitor:** alerts when a verdict changes, and automatic liquidation of paper trades. | automatic |
+| 📊 | **Trade reports** with 24h odds and news, every N hours or on demand. | `/report` |
+| 📜 | **History:** wins and losses, total profit and loss, best and worst trade, swaps. | `/history` |
+| 💬 | **AI chat in any language** that reads live data and can propose trades for you to confirm. | just type |
+
+---
+
+## How it works
+
+```mermaid
+flowchart LR
+    U([Trader on Telegram]) <--> B[nearProphet bot<br/>grammY]
+    B --> R[Rule engine<br/>EMA · RSI · MACD · ATR<br/>liquidation distance]
+    B --> F[Odds engine<br/>Monte Carlo on<br/>5-min candles]
+    B --> N[News<br/>crypto RSS feeds]
+    B --> A[AI agent<br/>NEAR AI Cloud]
+    A -- read-only tools --> R
+    A -- propose only --> P[Proposals<br/>Confirm / Cancel]
+    P -- user taps Confirm --> X[Execution]
+    X --> REF[(Ref Finance<br/>NEAR testnet)]
+    X --> PAPER[(Paper long/short<br/>at live prices)]
+    B --> M[Monitor<br/>every 5 min]
+    M --> R
+    M -- verdict changed --> U
+    R & F & N --> GT[(GeckoTerminal<br/>live market data)]
+    B --> DB[(SQLite<br/>encrypted keys)]
+```
+
+**One decision, step by step:**
+
+```mermaid
+sequenceDiagram
+    participant T as Trader
+    participant Bot as nearProphet
+    participant Rules as Rule engine
+    participant AI as AI (NEAR AI)
+    Bot->>Rules: every 5 min: live candles + position
+    Rules-->>Bot: verdict CLOSE (trend flipped, in profit)
+    Bot->>T: 🔔 Trade update + reasons
+    T->>Bot: "I fit close am now?"
+    Bot->>AI: question + live data (tools)
+    AI-->>Bot: answer in Pidgin + propose_close
+    Bot->>T: explanation + [✅ Confirm] [Cancel]
+    T->>Bot: taps Confirm
+    Bot->>T: ✅ Closed #1, PnL +$9.28
+```
+
+### The hold-or-close rules
+Checked in this order. Safety first:
+1. **Liquidation risk.** How far is liquidation compared with a normal hourly price swing (ATR)? One swing away means **CLOSE (urgent)**; up to 2.5 swings means **REDUCE (urgent)**.
+2. **Losing trades.** If the trend is against you (price vs EMA20/EMA50, MACD), the verdict is **REDUCE** or **CLOSE**.
+3. **Winning trades.** If the trend has flipped, or the move is overstretched (high RSI, fading momentum), the verdict is **TAKE PROFIT** or **CLOSE**.
+
+When the verdict is HOLD, the bot suggests a stop-loss 2 ATR behind the current price. The AI can explain a verdict but **can never soften an urgent one**.
+
+### The 24-hour odds
+The bot takes the last 2 days of real 5-minute price moves and replays them in random order 2,000 times. It counts how often the trade touches its stop-loss, a target 2 ATR in its favour, and liquidation, and how often it ends in profit. The moves are de-meaned, so the odds reflect how much the price swings, not a guess about its direction. Every report says they are estimates that can't foresee news or crashes.
+
+---
+
+## Safety by design
+
+| Risk | Safeguard |
+|---|---|
+| The AI makes a trade you didn't want | The AI has **no tool that moves money**. It can only create a proposal: a Confirm/Cancel button that only you can press, works once and expires after 60 seconds. |
+| The AI uses a tool it shouldn't | Each request gets an explicit allow-list of tools; any other tool call is refused. |
+| Made-up prices or news | Every number comes from a live tool call in the same conversation. News comes only from fetched headlines, and the AI is told never to invent any. |
+| Prompt injection through token names or headlines | All third-party text is passed as data, escaped before display, and the AI is told to ignore instructions inside it. |
+| Stolen keys | Wallet keys are encrypted with AES-256-GCM and bound to their owner. The AI never sees them. `/export` works only in a private chat and deletes itself after 60 seconds. |
+| Leaking trades in groups | Wallet and trade commands work only in private chat; the AI doesn't reply in groups. |
+| Runaway AI costs | Each user is capped at a set number of AI replies per day (60 by default), and the 5-minute monitor uses rules only. |
+| Accidental mainnet use | The bot refuses to start on mainnet unless that is explicitly enabled. Trade sizes are capped. |
+| Double execution | One trade at a time per user, and a position can't be closed twice. |
+
+## Why NEAR
+
+- **NEAR AI Cloud:** the AI runs on NEAR's own inference platform, which offers private inference, a fit for traders' questions about their own positions.
+- **Implicit accounts:** a wallet is just a key pair, so every Telegram user gets a working NEAR account instantly, with no sign-up or registration transaction.
+- **Ref Finance:** NEAR's main DEX supplies the swap liquidity and quotes.
+- **Fast, cheap transactions:** small, frequent trades make sense on NEAR.
+
+---
+
+## Engineering
+
+- **About 3,150 lines of strict TypeScript** across 25 small modules, with only 4 runtime dependencies (`grammy`, `near-api-js`, `@anthropic-ai/sdk`, `dotenv`). The database is Node's built-in SQLite.
+- **27 automated tests, about 800 lines:** leverage maths, indicators, encryption, the rule engine, the odds, news parsing, the NEAR AI adapter, and end-to-end bot flows with fake Telegram, market and NEAR network.
+- **`npm run smoke`** checks the live services without keys or transactions: market data, 5-minute candles, live odds, the news feeds, the NEAR RPC and a Ref Finance quote.
+- **Provider-agnostic AI:** NEAR AI Cloud by default, plus Anthropic directly or any OpenAI-compatible API.
+- **Runs anywhere:** scripts for a free Google Cloud server and for a Windows PC (starts at login, restarts after crashes, daily database backups). See [DEPLOY.md](DEPLOY.md).
+
+<details>
+<summary><b>Project layout</b></summary>
+
+```
+src/
+  index.ts       starts the bot and the monitor
+  bot.ts         Telegram commands
+  agent.ts       AI agent: chat, tools, commentary, trade proposals
+  llm-openai.ts  NEAR AI / OpenAI-compatible adapter
+  proposals.ts   confirm-before-execute for every money action
+  advisor.ts     hold/close verdict (rules)
+  forecast.ts    24h odds (bootstrap Monte Carlo on 5-min candles)
+  reports.ts     scheduled and on-demand trade reports
+  history.ts     closed trades, totals, swaps
+  news.ts        crypto RSS headlines
+  monitor.ts     5-minute background watcher and alerts
+  market.ts      GeckoTerminal prices, pools, candles
+  indicators.ts  EMA, RSI, MACD, ATR
+  analysis.ts    token safety score and market bias
+  ref.ts         Ref Finance quotes and swaps
+  near.ts        wallets, balances, NEAR RPC
+  crypto.ts      AES-256-GCM key encryption
+  paper.ts       paper long/short venue
+  perps.ts       leverage maths: liquidation price, PnL, fees
+  db.ts          SQLite: users, positions, trades
+  tokens.ts, lookup.ts, units.ts, format.ts, config.ts
+test/            unit and end-to-end tests
+scripts/         live smoke test, database backup
+deploy/          Linux server and Windows PC scripts
+```
+</details>
+
+---
+
+## All commands
+
 | Command | What it does |
 |---|---|
 | `/wallet` | Create or view your bot wallet, balances and paper balance |
-| `/export` | Show your private key. Private chat only; the message deletes itself after 60s |
-| `/connect <account>` | Watch a wallet you already own, read-only (the bot never asks for its key) |
+| `/export` | Show your private key (private chat only; the message deletes itself after 60s) |
+| `/connect <account>` | Watch a wallet you already own, read-only |
 | `/token <symbol or contract>` | Price, 1h/6h/24h change, market cap, liquidity, volume, buys and sells |
-| `/analyze <symbol or contract>` | Deep analysis: market bias, safety score (0–100), risk flags, technicals |
-| `/buy <token> <NEAR>` | Get a quote, then confirm with a button. Swaps on Ref Finance |
-| `/sell <token> <amount or 50%>` | Get a quote, then confirm. Sells the token for NEAR |
-| `/long <token> <$collateral> <leverage>` | Open a long |
+| `/analyze <symbol or contract>` | Deep analysis: market bias, safety score, risk flags, technicals, AI read |
+| `/buy <token> <NEAR>` | Quote, then Confirm. Swaps on Ref Finance |
+| `/sell <token> <amount or 50%>` | Quote, then Confirm. Sells the token for NEAR |
+| `/long <token> <$collateral> <leverage>` | Open a long (e.g. `/long NEAR $100 3`) |
 | `/short <token> <$collateral> <leverage>` | Open a short |
-| `/positions` | Open trades with live profit and loss (PnL) |
-| `/check [id]` | Live read of a trade: **HOLD / TAKE PROFIT / REDUCE / CLOSE**, with reasons |
+| `/positions` | Open trades with live profit and loss |
+| `/check [id]` | Live verdict: HOLD / TAKE PROFIT / REDUCE / CLOSE, with reasons |
 | `/close <id>` | Close a trade |
-| `/history [n]` | Closed trades (newest first), wins and losses, total PnL, best and worst, and recent swaps with explorer links. Shows 10 by default, up to 30 |
-| `/report now` | Trade report for your open trades: trend, 24h odds, news, and AI options |
-| `/report <hours>` / `/report off` | Get a report automatically every 1–24 hours, or stop them |
+| `/history [n]` | Closed trades, wins/losses, total profit and loss, swaps (10 by default, up to 30) |
+| `/report now` | Trade report: trend, 24h odds, news, AI options |
+| `/report <hours>` / `/report off` | Automatic reports every 1–24 hours (4 by default), or off |
+| *any text* | Chat with the AI in any language |
 
-## The AI agent
-Set one key in `.env` to switch it on. Without a key, the bot runs on rules only and everything else still works.
+## Run your own
 
-| Provider | Key | Notes |
-|---|---|---|
-| NEAR AI Cloud | `NEAR_AI_API_KEY` | Pay per token, private inference. Offers Claude (`claude-sonnet-5-5` is sent as `anthropic/claude-sonnet-5-5`) and open models such as `deepseek/deepseek-v4.1-flash`. |
-| Anthropic | `ANTHROPIC_API_KEY` | The only provider with live web search. |
-| Any OpenAI-compatible API | `AI_PROVIDER=openai`, `AI_BASE_URL`, `AI_API_KEY` | OpenRouter, Groq, Gemini and others. |
-
-If several keys are set, NEAR AI is used. Every provider gets headlines through the `get_news` tool.
-
-| Where | What the AI does |
-|---|---|
-| Chat | Users type normally in any language, e.g. "buy 2 NEAR of REF", "how my short dey go?", "¿debo cerrar mi long?". The AI reads data with tools and answers in the same language. |
-| `/analyze` | Adds a plain-language read under the numbers. May search the web for recent news. |
-| `/check` | Explains hold or close for each trade, building on the rule verdict. |
-| Alerts | When a trade's verdict changes, adds a short note in the user's last language (uses the cheaper model). |
-| Reports | Explains what the trend, odds and news mean for each trade, with two or three options and a price level for each. The trader decides. |
-| Trades | Can propose buy, sell, long, short or close. The user gets a Confirm/Cancel button; proposals expire after 60s and work once. |
-
-What the AI cannot do:
-- see private keys
-- execute a trade without a tap
-- override an urgent liquidation warning from the rules
-- reply in group chats (wallet and trade data stay private)
-
-Text inside token data and web pages is treated as data, not instructions.
-
-**Languages.** The AI replies in the language of the user's latest message and remembers it for alerts. Before a user's first chat, it uses their Telegram app language. Command names, buttons and the trade confirmation summaries stay in English.
-
-**Cost control.** Each user is capped at `AI_DAILY_LIMIT` AI replies per day. Web search uses at most 3 searches per question, and you can turn it off with `AI_WEB_SEARCH=off`. The automatic 5-minute re-check runs on rules only, so the AI is called only when a verdict changes.
-
-## How the hold-or-close read works
-Every few minutes (`MONITOR_INTERVAL_SEC`, 300 by default) the bot rechecks every open trade against live hourly candles. It messages the user when the verdict changes. It checks, in this order:
-1. **Liquidation risk.** How far is liquidation, compared with a normal hourly price swing (ATR)?
-2. **Losing trades.** Is the trend against you? It checks price against the 20- and 50-hour averages (EMA20/EMA50) and momentum (MACD).
-3. **Winning trades.** Has the trend flipped against you, or is the move overstretched (high RSI, fading momentum)? If so, take profit.
-
-When the verdict is HOLD, it also suggests a stop-loss 2 ATR behind the current price. Paper positions are liquidated automatically if the price crosses the liquidation price.
-
-The verdict comes from fixed rules applied to the signals. It is not a guarantee.
-
-## Trade reports
-Every `REPORT_INTERVAL_HOURS` (4 by default), each trader with open trades gets a report. Users can change their interval with `/report <hours>` or turn it off with `/report off`. For each trade it shows:
-- the rule verdict and the hourly and 5-minute trend
-- **estimated odds for the next 24 hours**: the chance of touching the suggested stop, a target the same distance above (2 ATR), and liquidation; the chance of being in profit at the end; and the likely price range
-- recent headlines about the token
-
-Then the AI, if switched on, explains the options.
-
-**How the odds work.** The bot takes the last 2 days of real 5-minute price moves and replays them in random order 2,000 times over the next 24 hours. It counts how often each level is touched. The moves are de-meaned, so the odds reflect how much the price swings, not which way it has been heading; trend is shown separately. They are estimates. They cannot foresee news, hacks or sudden crashes, and they are less reliable for thin tokens.
-
-**News.** Headlines come from the free public RSS feeds of Cointelegraph, Decrypt, The Block and CoinDesk; change them with `NEWS_FEEDS`. These feeds hold only the latest stories, roughly the last day or two, so smaller tokens are often not mentioned. The report then says there is no token news and the AI uses general market headlines. Headlines are third-party text: they are escaped before display, and the AI treats them as data, not instructions.
-
-## Project layout
-```
-src/
-  index.ts      starts the bot and the monitor
-  bot.ts        Telegram commands
-  config.ts     settings from .env
-  db.ts         SQLite: users, positions, trade log
-  crypto.ts     AES-256-GCM encryption of wallet keys
-  near.ts       wallets, balances, NEAR RPC, one trade at a time per user
-  ref.ts        Ref Finance quotes and swaps
-  market.ts     GeckoTerminal prices, pools, hourly candles
-  indicators.ts EMA, RSI, MACD, ATR
-  analysis.ts   token safety score and market bias
-  advisor.ts    hold/close verdict for a trade (rules)
-  forecast.ts   24h odds from 5-minute price moves (bootstrap Monte Carlo)
-  news.ts       headlines from free crypto RSS feeds
-  reports.ts    scheduled and on-demand trade reports
-  agent.ts      AI agent: chat, tools, commentary, trade proposals
-  llm-openai.ts lets the agent use NEAR AI or any OpenAI-compatible API
-  proposals.ts  confirm-before-execute for every money action
-  lookup.ts     symbol or name -> token
-  perps.ts      leverage maths: liquidation price, PnL, fees
-  paper.ts      paper long/short venue
-  monitor.ts    background trade watcher and alerts
-  tokens.ts     symbol registry (mainnet and testnet contracts)
-  format.ts     Telegram message formatting
-test/           unit tests and end-to-end tests
-```
-
-## Setup
 Requires Node 22.13 or later.
 ```bash
+git clone https://github.com/emmyloyal/nearProphet.git && cd nearProphet
 npm install
 cp .env.example .env
-npm run genkey          # paste the output into MASTER_KEY
+npm run genkey      # paste the output into MASTER_KEY
 # put your @BotFather token in BOT_TOKEN
-# optional: put a NEAR AI key in NEAR_AI_API_KEY (or an Anthropic key in ANTHROPIC_API_KEY) to switch on the AI agent
+# optional: a NEAR AI key in NEAR_AI_API_KEY switches on the AI
 npm start
 ```
-To get test NEAR, send funds from https://near-faucet.io to the address `/wallet` shows.
+Get free test NEAR at https://near-faucet.io for the address `/wallet` shows. `npm test` runs the test suite, `npm run smoke` checks the live services, and [DEPLOY.md](DEPLOY.md) covers hosting.
 
-## Tests
-`npm test`
-All 27 tests pass. They cover:
-- the maths: units, indicators, leverage, the paper venue
-- security: encryption and wallets
-- the logic: hold/close rules, token analysis, market data parsing
-- end-to-end bot flows with fake Telegram, market and NEAR network
-- the AI agent with a fake model: proposals, languages, limits, alerts
-- the NEAR AI (OpenAI-compatible) translation, news parsing and matching, the odds, and trade reports and their schedule
+<details>
+<summary><b>AI provider options</b></summary>
 
-`npm run smoke` checks the live services without keys or transactions: GeckoTerminal prices, hourly and 5-minute candles and search, live 24h odds, the news feeds, the NEAR RPC, and a Ref Finance quote on the configured network.
+| Provider | Setting | Notes |
+|---|---|---|
+| NEAR AI Cloud (default) | `NEAR_AI_API_KEY` | Pay per token, private inference. Claude models are sent as `anthropic/claude-...`; open models such as `deepseek/deepseek-v4.1-flash` also work. |
+| Anthropic | `ANTHROPIC_API_KEY` | Adds live web search. |
+| Any OpenAI-compatible API | `AI_PROVIDER=openai`, `AI_BASE_URL`, `AI_API_KEY` | OpenRouter, Groq, Gemini and others. |
 
-**Not tested yet:** live Ref swaps (sending a transaction), Telegram itself and real Claude replies. Run `/buy REF 0.5` on testnet first, then chat with the bot in a couple of languages.
+Without any key, the bot runs on rules only and every command still works.
+</details>
 
-## Before mainnet
-- Real long/short needs an adapter to a real perpetuals venue in place of `paper.ts`, e.g. NEAR perps on Hyperliquid.
-- Keep `MASTER_KEY` in a secrets manager and back it up. If it is lost, every bot wallet is lost. If it leaks along with the database, every user's funds can be stolen.
-- Get a security review. Keep `MAX_TRADE_NEAR` low. Leave the funder account empty.
-- A public bot that holds people's funds and offers leverage may need a licence. Get legal advice for the countries you serve.
-- The bot refuses to start on mainnet unless you set `I_UNDERSTAND_MAINNET_RISK=yes`.
+---
+
+## Status and roadmap
+
+**Working today on testnet:** wallets, research, Ref Finance swaps, paper long/short at live prices, the 5-minute monitor and alerts, trade reports with odds and news, history, and AI chat in any language on NEAR AI.
+
+**Honest limits:**
+- Long/short uses **paper money**: no NEAR exchange offers perpetuals on testnet.
+- Live Ref swaps are implemented and quotes are verified against the live contract, but a full swap transaction still needs an end-to-end test run.
+- The news feeds hold only the last day or two of stories, so NEAR-specific headlines are often missing.
+- Odds and verdicts are estimates and rules, not predictions or financial advice.
+
+**Next:**
+1. Real long/short through a perpetuals venue (e.g. NEAR perps on Hyperliquid) in place of the paper venue
+2. Price alerts ("tell me when NEAR hits $4") and a paper-trading leaderboard
+3. A Telegram Mini App dashboard with charts of your trades
+4. NEAR-focused news sources and on-chain signals (holder concentration, funding rates)
+5. A security review, then mainnet with low trade limits
+
+---
+
+## Author
+
+Built by **[@emmyloyal](https://github.com/emmyloyal)**.
+
+<sub>nearProphet reads market signals; it doesn't know the future. Nothing here is financial advice.</sub>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#11263d"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#00ec97"/>
+      <stop offset="1" stop-color="#3a8ee6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="360" rx="24" fill="url(#bg)"/>
+  <g opacity="0.18" stroke="#3a8ee6" stroke-width="2" fill="none">
+    <polyline points="640,250 700,230 750,240 810,190 860,205 920,150 980,165 1040,110 1100,125 1160,80"/>
+    <polyline points="640,290 700,280 760,285 820,260 880,270 940,240 1000,250 1060,215 1120,225 1160,200"/>
+  </g>
+  <circle cx="110" cy="120" r="46" fill="url(#accent)"/>
+  <text x="110" y="135" fill="#0b1220" font-size="40" font-weight="800" text-anchor="middle">NP</text>
+  <text x="180" y="112" fill="#ffffff" font-size="56" font-weight="800">nearProphet</text>
+  <text x="182" y="150" fill="#9fb3c8" font-size="22">An AI trading co-pilot for NEAR, inside Telegram</text>
+  <rect x="64" y="200" width="300" height="44" rx="22" fill="#16324f"/>
+  <text x="214" y="228" fill="#e6f1ff" font-size="17" text-anchor="middle">🛡 Checks your trades every 5 min</text>
+  <rect x="380" y="200" width="300" height="44" rx="22" fill="#16324f"/>
+  <text x="530" y="228" fill="#e6f1ff" font-size="17" text-anchor="middle">🌍 Speaks your language</text>
+  <rect x="696" y="200" width="300" height="44" rx="22" fill="#16324f"/>
+  <text x="846" y="228" fill="#e6f1ff" font-size="17" text-anchor="middle">✋ Never trades without a tap</text>
+  <text x="64" y="306" fill="#6f87a0" font-size="16">Built on NEAR Protocol · NEAR AI Cloud · Ref Finance</text>
+</svg>
