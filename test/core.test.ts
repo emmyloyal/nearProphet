@@ -188,3 +188,26 @@ test('token resolution on testnet', () => {
   assert.equal(resolveToken('<script>'), null);
   assert.equal(resolveToken('doge'), null);
 });
+
+test('token resolution: contract addresses, links and 0x addresses', () => {
+  const ref = { symbol: 'REF', marketId: 'token.v2.ref-finance.near', tradeId: 'ref.fakes.testnet' };
+  // A known token's mainnet or testnet contract maps to both identities
+  assert.deepEqual(resolveToken('token.v2.ref-finance.near'), ref);
+  assert.deepEqual(resolveToken('  TOKEN.V2.REF-FINANCE.NEAR '), ref);
+  assert.deepEqual(resolveToken('ref.fakes.testnet'), ref);
+  assert.deepEqual(resolveToken('$REF'), ref);
+  assert.equal(resolveToken('17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1')!.symbol, 'USDC');
+  // Unknown mainnet contract: research yes, testnet swap no
+  const bd = { symbol: 'blackdragon.tkn.near', marketId: 'blackdragon.tkn.near', tradeId: null };
+  assert.deepEqual(resolveToken('blackdragon.tkn.near'), bd);
+  // Links people paste
+  assert.deepEqual(resolveToken('https://nearblocks.io/token/blackdragon.tkn.near'), bd);
+  assert.deepEqual(resolveToken('https://testnet.nearblocks.io/address/ref.fakes.testnet?tab=tokens'), ref);
+  assert.deepEqual(resolveToken('https://app.rhea.finance/#usdt.tether-token.near|blackdragon.tkn.near'), bd, 'swap link: the token bought');
+  assert.deepEqual(resolveToken('near|token.v2.ref-finance.near'), ref);
+  // Ethereum address of a bridged token
+  assert.equal(resolveToken('0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eB48')!.marketId, 'a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near');
+  // Links without a token, and junk, stay unresolved
+  assert.equal(resolveToken('https://nearblocks.io/'), null);
+  assert.equal(resolveToken('https://evil.example/<script>'), null);
+});

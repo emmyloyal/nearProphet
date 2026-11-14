@@ -8,7 +8,8 @@ import { ftBalance, ftMetadata, nearBalance, signerAccount, withUserLock } from 
 import { closePosition, openPerp } from './paper.js';
 import { fee, liquidationPrice, type Side } from './perps.js';
 import { buyWithNear, quote, type Quote, sellForNear } from './ref.js';
-import { knownSymbols, type TokenRef } from './tokens.js';
+import { noMarketReason, notTradableReason, TOKEN_NOT_FOUND } from './lookup.js';
+import type { TokenRef } from './tokens.js';
 import { fromUnits, toUnits } from './units.js';
 
 /**
@@ -59,7 +60,8 @@ export class UserError extends Error {}
 export async function prepareBuy(db: Db, tgId: number, token: TokenRef | null, nearAmount: string): Promise<{ p: Proposal; summary: string }> {
   const user = db.user(tgId);
   if (!user.account_id) throw new UserError('Create a wallet first with /wallet.');
-  if (!token?.tradeId) throw new UserError(`That token is not tradable on ${config.network}. Known symbols: ${knownSymbols().join(', ')}`);
+  if (!token) throw new UserError(TOKEN_NOT_FOUND);
+  if (!token.tradeId) throw new UserError(notTradableReason(token)!);
   if (token.tradeId === config.wrapContract) throw new UserError('You already hold NEAR; pick another token to buy.');
   const amountIn = toUnits(nearAmount, 24);
   if (amountIn <= 0n) throw new UserError('Amount must be more than zero.');
@@ -75,7 +77,9 @@ export async function prepareBuy(db: Db, tgId: number, token: TokenRef | null, n
 export async function prepareSell(db: Db, tgId: number, token: TokenRef | null, amount: string): Promise<{ p: Proposal; summary: string }> {
   const user = db.user(tgId);
   if (!user.account_id) throw new UserError('Create a wallet first with /wallet.');
-  if (!token?.tradeId || token.tradeId === config.wrapContract) throw new UserError(`That token is not sellable on ${config.network}.`);
+  if (!token) throw new UserError(TOKEN_NOT_FOUND);
+  if (!token.tradeId) throw new UserError(notTradableReason(token)!);
+  if (token.tradeId === config.wrapContract) throw new UserError('That is NEAR itself; pick another token to sell.');
   const meta = await ftMetadata(token.tradeId);
   const bal = await ftBalance(token.tradeId, user.account_id);
   let amountIn: bigint;
@@ -102,7 +106,8 @@ export async function prepareOpen(
   collateral: number,
   leverage: number,
 ): Promise<{ p: Proposal; summary: string }> {
-  if (!token?.marketId) throw new UserError('Token not found. Try its contract address.');
+  if (!token) throw new UserError(TOKEN_NOT_FOUND);
+  if (!token.marketId) throw new UserError(noMarketReason(token)! + ' Long/short needs a market price.');
   if (!(collateral >= 1)) throw new UserError('Collateral must be at least $1.');
   if (!(leverage >= 1 && leverage <= config.maxLeverage)) throw new UserError(`Leverage must be between 1 and ${config.maxLeverage}.`);
   const m = await getMarket(token.marketId);

@@ -7,7 +7,7 @@ import type { Db } from './db.js';
 import { deepAnalysis, DISCLAIMER, esc, positionLine, positionReport, price, signed, tokenInfo } from './format.js';
 import { buildHistory } from './history.js';
 import { technicals } from './indicators.js';
-import { findToken } from './lookup.js';
+import { findToken, noMarketReason, TOKEN_NOT_FOUND } from './lookup.js';
 import { getMarket, getMarketAndCandles, MarketError } from './market.js';
 import { evaluate, liveTechnicals } from './monitor.js';
 import { createWalletFor, exportKey, ftBalance, ftMetadata, fundNewWallet, nearBalance } from './near.js';
@@ -183,20 +183,22 @@ export function createBot(db: Db, agent: Agent | null = null): Bot {
   // ---------- Research ----------
   bot.command('token', async (ctx) => {
     const [q] = args(ctx);
-    if (!q) return reply(ctx, 'Usage: /token NEAR');
+    if (!q) return reply(ctx, 'Usage: /token NEAR   (or a contract address or link)');
     await guard(ctx, async () => {
       const t = await findToken(q);
-      if (!t?.marketId) return reply(ctx, 'Token not found. Try its contract address.');
+      if (!t) return reply(ctx, esc(TOKEN_NOT_FOUND));
+      if (!t.marketId) return reply(ctx, esc(noMarketReason(t)!));
       return reply(ctx, tokenInfo(await getMarket(t.marketId)));
     });
   });
 
   bot.command('analyze', async (ctx) => {
     const [q] = args(ctx);
-    if (!q) return reply(ctx, 'Usage: /analyze NEAR');
+    if (!q) return reply(ctx, 'Usage: /analyze NEAR   (or a contract address or link)');
     await guard(ctx, async () => {
       const t = await findToken(q);
-      if (!t?.marketId) return reply(ctx, 'Token not found. Try its contract address.');
+      if (!t) return reply(ctx, esc(TOKEN_NOT_FOUND));
+      if (!t.marketId) return reply(ctx, esc(noMarketReason(t)!));
       const { market, candles } = await getMarketAndCandles(t.marketId);
       const tech = candles.length ? technicals(candles, market.priceUsd) : null;
       const report = analyzeToken(market, tech);
@@ -249,7 +251,8 @@ export function createBot(db: Db, agent: Agent | null = null): Bot {
     if (!sym || !coll) return reply(ctx, `Usage: /${side} NEAR 100 3   ($100 collateral at 3x)`);
     await guard(ctx, async () => {
       const token = await findToken(sym);
-      if (!token?.marketId) return reply(ctx, 'Token not found. Try its contract address.');
+      if (!token) return reply(ctx, esc(TOKEN_NOT_FOUND));
+      if (!token.marketId) return reply(ctx, esc(noMarketReason(token)! + ' Long/short needs a market price.'));
       const market = await getMarket(token.marketId);
       if ((market.liquidityUsd ?? 0) < 25_000) return reply(ctx, `Liquidity is too thin ($${(market.liquidityUsd ?? 0).toFixed(0)}) for a meaningful ${side}. Minimum is $25K.`);
       const pos = openPerp(db, {

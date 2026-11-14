@@ -6,7 +6,7 @@
   <a href="https://t.me/NearProphetbot"><img src="https://img.shields.io/badge/Telegram-@NearProphetbot-26A5E4?logo=telegram&logoColor=white" alt="Telegram"></a>
   <img src="https://img.shields.io/badge/NEAR-testnet-00EC97" alt="NEAR testnet">
   <img src="https://img.shields.io/badge/AI-NEAR%20AI%20Cloud-3a8ee6" alt="NEAR AI Cloud">
-  <img src="https://img.shields.io/badge/tests-27%20passing-2ea44f" alt="27 tests passing">
+  <img src="https://img.shields.io/badge/tests-28%20passing-2ea44f" alt="28 tests passing">
   <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" alt="TypeScript strict">
 </p>
 
@@ -90,7 +90,7 @@ nearProphet puts the whole loop into one Telegram chat: **research → trade →
 |---|---|---|
 | 👛 | **Instant wallet.** A NEAR implicit account is created for each user and its key is encrypted with AES-256-GCM. | `/wallet`, `/export` |
 | 👀 | **Watch your own wallet** read-only. The bot never asks for its key. | `/connect` |
-| 🔎 | **Token research:** price, liquidity, volume, buys/sells, market bias, a 0–100 safety score and risk flags. | `/token`, `/analyze` |
+| 🔎 | **Token research:** price, liquidity, volume, buys/sells, market bias, a 0–100 safety score and risk flags. Works with any NEAR token: type a symbol, or paste a contract address, a NearBlocks or Rhea link, or the `0x` address of a bridged Ethereum token. | `/token`, `/analyze` |
 | 🔁 | **Spot swaps on Ref Finance** with a live quote, slippage protection and an explorer link. | `/buy`, `/sell` |
 | 📈 | **Long/short with leverage** at live prices, with liquidation price and fees. Paper money for now. | `/long`, `/short`, `/close` |
 | 🛡 | **Hold-or-close verdict** for every trade, with reasons and a suggested stop-loss. | `/check`, `/positions` |
@@ -180,7 +180,7 @@ The bot takes the last 2 days of real 5-minute price moves and replays them in r
 ## Engineering
 
 - **About 3,150 lines of strict TypeScript** across 25 small modules, with only 4 runtime dependencies (`grammy`, `near-api-js`, `@anthropic-ai/sdk`, `dotenv`). The database is Node's built-in SQLite.
-- **27 automated tests, about 800 lines:** leverage maths, indicators, encryption, the rule engine, the odds, news parsing, the NEAR AI adapter, and end-to-end bot flows with fake Telegram, market and NEAR network.
+- **28 automated tests, about 830 lines:** leverage maths, indicators, encryption, the rule engine, the odds, news parsing, the NEAR AI adapter, and end-to-end bot flows with fake Telegram, market and NEAR network.
 - **`npm run smoke`** checks the live services without keys or transactions: market data, 5-minute candles, live odds, the news feeds, the NEAR RPC and a Ref Finance quote.
 - **Provider-agnostic AI:** NEAR AI Cloud by default, plus Anthropic directly or any OpenAI-compatible API.
 - **Runs anywhere:** scripts for a free Google Cloud server and for a Windows PC (starts at login, restarts after crashes, daily database backups). See [DEPLOY.md](DEPLOY.md).
@@ -226,8 +226,8 @@ deploy/          Linux server and Windows PC scripts
 | `/wallet` | Create or view your bot wallet, balances and paper balance |
 | `/export` | Show your private key (private chat only; the message deletes itself after 60s) |
 | `/connect <account>` | Watch a wallet you already own, read-only |
-| `/token <symbol or contract>` | Price, 1h/6h/24h change, market cap, liquidity, volume, buys and sells |
-| `/analyze <symbol or contract>` | Deep analysis: market bias, safety score, risk flags, technicals, AI read |
+| `/token <symbol, contract or link>` | Price, 1h/6h/24h change, market cap, liquidity, volume, buys and sells |
+| `/analyze <symbol, contract or link>` | Deep analysis: market bias, safety score, risk flags, technicals, AI read |
 | `/buy <token> <NEAR>` | Quote, then Confirm. Swaps on Ref Finance |
 | `/sell <token> <amount or 50%>` | Quote, then Confirm. Sells the token for NEAR |
 | `/long <token> <$collateral> <leverage>` | Open a long (e.g. `/long NEAR $100 3`) |
@@ -239,6 +239,8 @@ deploy/          Linux server and Windows PC scripts
 | `/report now` | Trade report: trend, 24h odds, news, AI options |
 | `/report <hours>` / `/report off` | Automatic reports every 1–24 hours (4 by default), or off |
 | *any text* | Chat with the AI in any language |
+
+Wherever a command takes a token, you can use its symbol (`REF`), contract address (`token.v2.ref-finance.near`), a NearBlocks or Rhea link, or, for tokens bridged from Ethereum, the `0x` address.
 
 ## Run your own
 
